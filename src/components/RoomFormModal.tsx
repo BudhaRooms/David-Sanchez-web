@@ -165,6 +165,7 @@ export function RoomFormModal({ onClose, onSuccess }: RoomFormModalProps) {
                   <option value="Plaza de Toros">Plaza de Toros</option>
                   <option value="Puente Rojo">Puente Rojo</option>
                 </select>
+              </div>
             </div>
 
             {/* Checklists Dinámicos (Amenities) */}
