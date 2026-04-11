@@ -3,6 +3,10 @@ import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { CheckCircle2, Wifi, Bath, Tv, MonitorPlay, Lightbulb, Refrigerator, ChefHat, Droplets, Utensils, Sparkles, Film } from 'lucide-react';
+
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function Page() {
   const cookieStore = await cookies();
@@ -189,14 +193,12 @@ export default async function Page() {
                         <div className="relative h-[400px] md:h-[550px] overflow-hidden">
                             <img alt="Suite Zen Gold" className="w-full h-full object-cover transition-transform duration-10000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsh6XO_m6NhoL8Khkssn5m-PwGHI9wEiXNm6yDIenEMzWM0OcxF2QD_-4AGUEHla5CazY_8gWMPAg5ljjSCKX2fWnoxRWzQJYHYF_d002ui1kEjA3GNEtFWhSrf8i3TY_020BligPB5iK8IzXKWv5I_1Wx51lMKBjJX4nPd06JOQZ1FT43jGzMBo8R96IIuv2muoaZLpBhtkOHZ5KMAEzjaWLS0TeVnC-fAk9hVT5TTZjwTytwipf1tDLrqXYCn1g-uW6cx9D6Ers"/>
                             <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent opacity-80 z-10"></div>
-                            <div className="absolute top-0 left-0 gold-gradient-bg text-on-primary px-6 md:px-8 py-3 md:py-4 font-headline font-black text-[9px] md:text-[10px] uppercase z-20 shadow-lg leading-none">DESDE 75€</div>
                         </div>
                         <div className="p-8 md:p-14 border-t border-white/5">
                             <h3 className="font-headline text-2xl md:text-3xl mb-8 md:mb-10 text-white uppercase tracking-[0.15em] md:tracking-[0.2em]">Suite Zen Gold</h3>
-                            <div className="flex justify-between mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6">
-                                <span>25m² Luxury</span>
-                                <span>Free Wifi</span>
-                                <span>AC Unit</span>
+                            <div className="flex justify-between md:justify-start gap-8 mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6">
+                                <Wifi className="w-5 h-5 text-primary/80" />
+                                <Droplets className="w-5 h-5 text-primary/80" />
                             </div>
                             <button className="w-full py-5 md:py-6 bg-transparent border border-primary/50 text-primary font-headline font-black text-[11px] md:text-[12px] uppercase tracking-[0.3em] md:tracking-[0.5em] hover:bg-primary hover:text-on-primary transition-all">ver disponibilidad</button>
                         </div>
@@ -206,14 +208,12 @@ export default async function Page() {
                         <div className="relative h-[400px] md:h-[550px] overflow-hidden">
                             <img alt="Deluxe Urban" className="w-full h-full object-cover transition-transform duration-10000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmqRZktc56JLcNtglo9PJEQthjMx4XrtXwfQwg8HklS-EuKUCynsTz3vIfa-lK08-_p1Qhyt9yiH9wkuyGYC_LKdjJtit7mqdhTtw3pKxEjTnPfpPou6RxsttvIWNvoI_5Ek4qx23PbferzlO4CoqpXhwqUVJ09SUstmK20HFBqfQgivI-kWDu1eICZw3TdCjyIl8YOj-poEpvo1h9V5sZHFn3eZ8vQjGUqU6bdO_P1J5Ehm948x2lS-68UVh-cNyty2q_7QQ3yFY"/>
                             <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent opacity-80 z-10"></div>
-                            <div className="absolute top-0 left-0 gold-gradient-bg text-on-primary px-6 md:px-8 py-3 md:py-4 font-headline font-black text-[9px] md:text-[10px] uppercase z-20 shadow-lg leading-none">DESDE 60€</div>
                         </div>
                         <div className="p-8 md:p-14 border-t border-white/5">
                             <h3 className="font-headline text-2xl md:text-3xl mb-8 md:mb-10 text-white uppercase tracking-[0.15em] md:tracking-[0.2em]">Deluxe Urban</h3>
-                            <div className="flex justify-between mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6">
-                                <span>20m² Luxe</span>
-                                <span>Nespresso</span>
-                                <span>Smart TV</span>
+                            <div className="flex justify-between md:justify-start gap-8 mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6">
+                                <Tv className="w-5 h-5 text-primary/80" />
+                                <Refrigerator className="w-5 h-5 text-primary/80" />
                             </div>
                             <button className="w-full py-5 md:py-6 bg-transparent border border-primary/50 text-primary font-headline font-black text-[11px] md:text-[12px] uppercase tracking-[0.3em] md:tracking-[0.5em] hover:bg-primary hover:text-on-primary transition-all">ver disponibilidad</button>
                         </div>
@@ -223,14 +223,12 @@ export default async function Page() {
                         <div className="relative h-[400px] md:h-[550px] overflow-hidden">
                             <img alt="Budha Loft" className="w-full h-full object-cover transition-transform duration-10000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIRf65LI1ju1vQE6HUpqwU24vRFfOk5Szfehn1O0GOjE22p3trAiCMa8iE6Odcs3ntJ-rdyhSMW9HB0AUBLP1wKe0lUnUED5lMDboI3oovXILcyijORg9YRd7cD3kaSIlhqYJddDjjyHj7j0YJg7vlYdr79agkibAY_FZwLuucivpgoRJ4juZokopjaJW2bDer99T-ek12TGvUCRv5FCMZqSEUPRDIrEhH1FEVeF90jkL3krlCQzanB_Rv0ATZLnM4Ro4Kw-yEbp0"/>
                             <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent opacity-80 z-10"></div>
-                            <div className="absolute top-0 left-0 gold-gradient-bg text-on-primary px-6 md:px-8 py-3 md:py-4 font-headline font-black text-[9px] md:text-[10px] uppercase z-20 shadow-lg leading-none">DESDE 90€</div>
                         </div>
                         <div className="p-8 md:p-14 border-t border-white/5">
                             <h3 className="font-headline text-2xl md:text-3xl mb-8 md:mb-10 text-white uppercase tracking-[0.15em] md:tracking-[0.2em]">Budha Loft</h3>
-                            <div className="flex justify-between mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6">
-                                <span>35m² Loft</span>
-                                <span>Luxury Bath</span>
-                                <span>Mini Bar</span>
+                            <div className="flex justify-between md:justify-start gap-8 mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6">
+                                <Bath className="w-5 h-5 text-primary/80" />
+                                <Sparkles className="w-5 h-5 text-primary/80" />
                             </div>
                             <button className="w-full py-5 md:py-6 bg-transparent border border-primary/50 text-primary font-headline font-black text-[11px] md:text-[12px] uppercase tracking-[0.3em] md:tracking-[0.5em] hover:bg-primary hover:text-on-primary transition-all">ver disponibilidad</button>
                         </div>
@@ -239,11 +237,27 @@ export default async function Page() {
                 ) : (
                     featuredRooms.map((room: { id: string; name: string; slug: string; media_gallery?: string[]; climate_desc?: string; size?: string; amenities?: string[] }) => {
                         const heroMedia = room.media_gallery && room.media_gallery.length > 0 ? room.media_gallery[0] : "https://lh3.googleusercontent.com/aida-public/AB6AXuCmqRZktc56JLcNtglo9PJEQthjMx4XrtXwfQwg8HklS-EuKUCynsTz3vIfa-lK08-_p1Qhyt9yiH9wkuyGYC_LKdjJtit7mqdhTtw3pKxEjTnPfpPou6RxsttvIWNvoI_5Ek4qx23PbferzlO4CoqpXhwqUVJ09SUstmK20HFBqfQgivI-kWDu1eICZw3TdCjyIl8YOj-poEpvo1h9V5sZHFn3eZ8vQjGUqU6bdO_P1J5Ehm948x2lS-68UVh-cNyty2q_7QQ3yFY";
-                        const price = room.climate_desc || "Consultar";
-                        const isVideo = heroMedia.includes('.mp4');
+                        const isVideo = heroMedia.toLowerCase().includes('.mp4') || heroMedia.toLowerCase().includes('.mov') || heroMedia.toLowerCase().includes('.webm');
 
-                        // Extraer 2 amenities para mostrarlos aquí
-                        const listAmenities = (room.amenities || []).slice(0, 2);
+                        // Extraer 3 amenities max para mostrarlos aquí
+                        const listAmenities = (room.amenities || []).slice(0, 3);
+
+                        // Icon mapper refactorizado
+                        const getIcon = (amenity: string) => {
+                            let Icon = CheckCircle2;
+                            if(amenity === 'wifi') Icon = Wifi;
+                            if(amenity === 'bano_privado') Icon = Bath;
+                            if(amenity === 'tv_size') Icon = Tv;
+                            if(amenity === 'netflix') Icon = Film;
+                            if(amenity === 'youtube') Icon = MonitorPlay;
+                            if(amenity === 'luces') Icon = Lightbulb;
+                            if(amenity === 'nevera') Icon = Refrigerator;
+                            if(amenity === 'cocina') Icon = ChefHat;
+                            if(amenity === 'agua_caliente') Icon = Droplets;
+                            if(amenity === 'utensilios') Icon = Utensils;
+                            if(amenity === 'limpieza') Icon = Sparkles;
+                            return Icon;
+                        };
 
                         return (
                           <div key={room.id} className="group bg-surface-container-lowest border border-white/5 hover:border-primary/40 transition-all duration-700">
@@ -254,14 +268,13 @@ export default async function Page() {
                                       <img alt={room.name} className="w-full h-full object-cover transition-transform duration-10000 group-hover:scale-105" src={heroMedia}/>
                                   )}
                                   <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent opacity-80 z-10"></div>
-                                  <div className="absolute top-0 left-0 gold-gradient-bg text-on-primary px-6 md:px-8 py-3 md:py-4 font-headline font-black text-[9px] md:text-[10px] uppercase z-20 shadow-lg leading-none">{price}</div>
                               </div>
                               <div className="p-8 md:p-14 border-t border-white/5 flex flex-col justify-between h-auto">
                                   <h3 className="font-headline text-2xl md:text-3xl mb-8 md:mb-10 text-white uppercase tracking-[0.15em] md:tracking-[0.2em]">{room.name}</h3>
-                                  <div className="flex justify-between mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6">
-                                      <span>{room.size || "15m²"}</span>
+                                  <div className="flex justify-between md:justify-start gap-6 md:gap-8 mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6 flex-wrap">
                                       {listAmenities.map((am: string, i: number) => {
-                                          return <span key={i}>{am.substring(0,10)}</span>
+                                          const Icon = getIcon(am);
+                                          return <div key={i} title={am.replace('_', ' ')}><Icon className="w-5 h-5 text-primary/80 transition-all hover:text-white" /></div>;
                                       })}
                                   </div>
                                   <Link href={`/habitaciones/${room.slug}`} className="w-full py-5 md:py-6 bg-transparent border border-primary/50 text-center text-primary font-headline font-black text-[11px] md:text-[12px] uppercase tracking-[0.3em] md:tracking-[0.5em] hover:bg-primary hover:text-on-primary transition-all inline-block mt-auto">
