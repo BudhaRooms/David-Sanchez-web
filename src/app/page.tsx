@@ -357,10 +357,10 @@ export default async function Page() {
               <p className="opacity-50 text-neutral-400 text-center md:text-left leading-relaxed">© 2024 Budha Rooms Alicante. <br className="md:hidden"/> El Silencio es el Nuevo Lujo.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-8 md:gap-14 relative z-10">
-              <Link className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="#">Aviso Legal</Link>
-              <Link className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="#">Privacidad</Link>
-              <Link className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="#">Cookies</Link>
-              <Link className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="#">Contacto</Link>
+              <Link className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="/aviso-legal">Aviso Legal</Link>
+              <Link className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="/privacidad">Privacidad</Link>
+              <Link className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="/cookies">Cookies</Link>
+              <a className="hover:text-white transition-all border-b border-transparent hover:border-white pb-2" href="https://wa.me/34698947098" target="_blank" rel="noreferrer">Contacto</a>
           </div>
       </footer>
     </main>

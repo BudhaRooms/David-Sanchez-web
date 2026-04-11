@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SocialMediaFloater } from "@/components/SocialMediaFloater";
+import { CookieBanner } from "@/components/CookieBanner";
 export const metadata: Metadata = {
   title: "Budha Rooms Alicante",
   description: "El mejor alojamiento de toda la provincia de Alicante, descubre nuestras instalaciones.",
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className="font-body min-h-screen bg-background text-on-background flex flex-col m-0 p-0 overflow-x-hidden relative">
         {children}
         <SocialMediaFloater />
+        <CookieBanner />
       </body>
     </html>
   );
