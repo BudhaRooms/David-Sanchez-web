@@ -3,6 +3,8 @@ import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import RoomMediaGallery from '@/components/RoomMediaGallery';
+import { ArrowLeft, CheckCircle2, Wifi, Bath, Tv, MonitorPlay, Lightbulb, Refrigerator, ChefHat, Droplets, Utensils, Sparkles, Film, Lock } from 'lucide-react';
 
 export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -27,8 +29,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   
   // Procesar todo el array de media recogiendo maximo 1 video y 5 imagenes
   const gallery = room.media_gallery || [];
-  const videos = gallery.filter((m: string) => m.includes('.mp4') || m.includes('video')).slice(0, 1);
-  const photos = gallery.filter((m: string) => !m.includes('.mp4') && !m.includes('video')).slice(0, 5);
+  const videos = gallery.filter((m: string) => m.toLowerCase().includes('.mp4') || m.toLowerCase().includes('.mov') || m.toLowerCase().includes('video')).slice(0, 1);
+  const photos = gallery.filter((m: string) => !(m.toLowerCase().includes('.mp4') || m.toLowerCase().includes('.mov') || m.toLowerCase().includes('video'))).slice(0, 5);
   const mediaToShow = [...videos, ...photos];
 
   return (
@@ -39,7 +41,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                   <img src="/logo_stitch.png" alt="Budha Rooms" className="h-5 md:h-6 object-contain" />
               </Link>
               <Link href="/" className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-xs hover:opacity-80 transition-opacity">
-                <span className="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+                <ArrowLeft className="w-4 h-4" />
                 Ver Catálogo
               </Link>
           </div>
@@ -50,34 +52,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
               
               {/* Media Column */}
               <div className="col-span-12 lg:col-span-8 flex flex-col gap-8 order-2 lg:order-1">
-                  {mediaToShow.length > 0 ? mediaToShow.map((item: string, idx: number) => {
-                      const isVideo = item.includes('.mp4') || item.includes('video');
-                      return (
-                          <div key={idx} className="w-full bg-surface-container-highest rounded-none md:rounded-lg overflow-hidden border border-outline-variant/10 shadow-[0_40px_60px_rgba(0,0,0,0.4)]">
-                              {isVideo ? (
-                                <div className="relative w-full aspect-video">
-                                  <video 
-                                    src={item} 
-                                    className="w-full h-full object-cover" 
-                                    autoPlay 
-                                    muted 
-                                    loop 
-                                    playsInline
-                                    controls
-                                  />
-                                </div>
-                              ) : (
-                                <div className="relative w-full aspect-4/3 md:aspect-video">
-                                  <img alt={`${room.name} ${idx}`} src={item} className="w-full h-full object-cover" />
-                                </div>
-                              )}
-                          </div>
-                      );
-                  }) : (
-                      <div className="w-full bg-surface-container-highest aspect-video flex items-center justify-center text-on-surface-variant font-serif opacity-50 border border-dashed border-outline-variant/20">
-                          Sin archivos multimedia
-                      </div>
-                  )}
+                  <RoomMediaGallery mediaList={mediaToShow} roomName={room.name} />
               </div>
 
               {/* Info Column (Sticky) */}
@@ -98,32 +73,31 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                           <h3 className="font-headline text-xl text-on-background mb-6">Amenidades del Santuario</h3>
                           <ul className="space-y-4">
                               {amenities.map((amenity: string, idx: number) => {
-                                  // Map common amenities to labels and icons
-                                  let iconStr = "check_circle";
+                                  let Icon = CheckCircle2;
                                   let label = amenity;
                                   
-                                  // Old Room
-                                  if(amenity === 'wifi') { iconStr = "wifi"; label = "Conexión Inalámbrica Privada"; }
-                                  if(amenity === 'bano_privado') { iconStr = "bathtub"; label = "Baño En Suite"; }
-                                  if(amenity === 'tv_size') { iconStr = "tv"; label = "Pantalla Inteligente"; }
-                                  if(amenity === 'nevera') { iconStr = "kitchen"; label = "Mini Bar Personal"; }
-                                  if(amenity === 'netflix') { iconStr = "movie"; label = "Cine bajo demanda"; }
-                                  if(amenity === 'youtube') { iconStr = "smart_display"; label = "Entretenimiento YouTube"; }
-                                  if(amenity === 'espejo') { iconStr = "checkroom"; label = "Espejo de Cuerpo Entero"; }
-                                  if(amenity === 'luces') { iconStr = "lightbulb"; label = "Iluminación Ambiental Regulable"; }
+                                  if(amenity === 'wifi') { Icon = Wifi; label = "Conexión Inalámbrica Privada"; }
+                                  if(amenity === 'bano_privado') { Icon = Bath; label = "Baño En Suite"; }
+                                  if(amenity === 'tv_size') { Icon = Tv; label = "Pantalla Inteligente"; }
+                                  if(amenity === 'nevera') { Icon = Refrigerator; label = "Mini Bar Personal"; }
+                                  if(amenity === 'netflix') { Icon = Film; label = "Cine bajo demanda"; }
+                                  if(amenity === 'youtube') { Icon = MonitorPlay; label = "Entretenimiento YouTube"; }
+                                  if(amenity === 'espejo') { Icon = CheckCircle2; label = "Espejo de Cuerpo Entero"; }
+                                  if(amenity === 'luces') { Icon = Lightbulb; label = "Iluminación Ambiental Regulable"; }
 
-                                  // Old Apartment
-                                  if(amenity === 'ascensor') { iconStr = "elevator"; label = "Acceso por Ascensor"; }
-                                  if(amenity === 'cocina') { iconStr = "kitchen"; label = "Cocina Equipada"; }
-                                  if(amenity === 'lavadora') { iconStr = "local_laundry_service"; label = "Servicio de Lavandería"; }
-                                  if(amenity === 'agua_caliente') { iconStr = "water_drop"; label = "Agua Caliente"; }
-                                  if(amenity === 'microondas') { iconStr = "microwave"; label = "Horno Microondas"; }
-                                  if(amenity === 'utensilios') { iconStr = "skillet"; label = "Utensilios de Cocina"; }
-                                  if(amenity === 'limpieza') { iconStr = "cleaning_services"; label = "Productos de Limpieza"; }
+                                  if(amenity === 'ascensor') { Icon = CheckCircle2; label = "Acceso por Ascensor"; }
+                                  if(amenity === 'cocina') { Icon = ChefHat; label = "Cocina Equipada"; }
+                                  if(amenity === 'lavadora') { Icon = Sparkles; label = "Servicio de Lavandería"; }
+                                  if(amenity === 'agua_caliente') { Icon = Droplets; label = "Agua Caliente"; }
+                                  if(amenity === 'microondas') { Icon = Refrigerator; label = "Horno Microondas"; }
+                                  if(amenity === 'utensilios') { Icon = Utensils; label = "Utensilios de Cocina"; }
+                                  if(amenity === 'limpieza') { Icon = Sparkles; label = "Productos de Limpieza"; }
 
                                   return (
-                                    <li key={idx} className="flex items-center gap-4 text-on-surface-variant">
-                                        <span className="material-symbols-outlined text-primary" data-icon={iconStr}>{iconStr}</span>
+                                    <li key={idx} className="flex items-center gap-4 text-on-surface-variant group">
+                                        <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/10 group-hover:scale-110 transition-transform">
+                                          <Icon className="w-4 h-4 text-primary opacity-90" />
+                                        </div>
                                         <span className="text-sm tracking-wide">{label}</span>
                                     </li>
                                   )
@@ -136,12 +110,12 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
 
                       {/* Action */}
                       <a 
-                        className="w-full py-5 bg-primary-container text-on-primary font-bold tracking-widest uppercase text-sm rounded-md transition-all hover:bg-primary hover:-translate-y-1 shadow-xl flex items-center justify-center gap-3"
+                        className="w-full py-5 bg-primary-container text-on-primary font-bold tracking-widest uppercase text-sm rounded-md transition-all hover:bg-primary hover:-translate-y-1 shadow-xl flex items-center justify-center gap-3 active:scale-[0.98]"
                         href="https://wa.me/34698947098" 
                         target="_blank" 
                         rel="noreferrer"
                       >
-                          <span className="material-symbols-outlined text-xl" data-icon="lock_open">lock_open</span>
+                          <Lock className="w-5 h-5" />
                           Asegurar Reserva
                       </a>
                   </div>

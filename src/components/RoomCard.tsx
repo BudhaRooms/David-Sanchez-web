@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
 import Link from 'next/link';
+import { CheckCircle2, Wifi, Bath, Tv, MonitorPlay, Lightbulb, Refrigerator, ChefHat, Droplets, Utensils, Sparkles, Film } from 'lucide-react';
 
 interface RoomCardProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -12,77 +13,78 @@ export default function RoomCard({ room, href }: RoomCardProps) {
   // Use the first media item as the cover
   const gallery = room.media_gallery || [];
   const coverUrl = gallery.length > 0 ? gallery[0] : "/placeholder.jpg";
-  const isVideo = coverUrl.includes('.mp4') || coverUrl.includes('video');
+  const urlLower = coverUrl.toLowerCase();
+  const isVideo = urlLower.includes('.mp4') || urlLower.includes('.mov') || urlLower.includes('.webm') || urlLower.includes('video');
   const url = href || `/habitaciones/${room.slug}`;
   
   // Try to grab parent zone if it came nested in Supabase (room.parent.zone)
   const zoneName = room.parent?.zone || "Exclusiva";
 
-  const price = room.climate_desc || "Consultar"; // previously mapped climate_desc to price in our form
   const amenities = room.amenities || [];
 
   return (
-    <div className="flex flex-col bg-surface-container-high rounded-lg overflow-hidden group hover:shadow-[0_20px_40px_rgba(0,0,0,0.8)] transition-all duration-700">
-      <Link href={url} className="relative aspect-video overflow-hidden block">
+    <div className="flex flex-col bg-surface-container-high rounded-lg overflow-hidden group hover:shadow-[0_20px_40px_rgba(0,0,0,0.8)] transition-all duration-700 border border-outline-variant/10">
+      <Link href={url} className="relative aspect-4/5 sm:aspect-3/4 overflow-hidden block bg-surface-container-highest">
         {isVideo ? (
-          <video 
-            src={coverUrl} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale group-hover:grayscale-0"
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-          />
+           <video 
+           src={coverUrl} 
+           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+           autoPlay 
+           muted 
+           loop 
+           playsInline
+         />
         ) : (
           <img 
             alt={room.name} 
             src={coverUrl} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale group-hover:grayscale-0" 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
           />
         )}
-        <div className="absolute top-4 right-4 bg-background/80 backdrop-blur px-3 py-1 rounded-full text-[10px] uppercase tracking-widest text-primary font-bold z-10 border border-outline-variant/30">
+        <div className="absolute top-4 right-4 bg-background/80 backdrop-blur px-3 py-1 rounded-full text-[10px] uppercase tracking-widest text-primary font-bold z-10 border border-outline-variant/30 shadow-sm">
           {zoneName}
         </div>
       </Link>
       
       <div className="p-8 flex flex-col flex-1">
         <Link href={url}>
-          <h3 className="font-headline text-2xl text-on-background mb-4 hover:text-primary transition-colors">{room.name}</h3>
+          <h3 className="font-headline text-2xl text-on-background mb-3 hover:text-primary transition-colors">{room.name}</h3>
         </Link>
-        <p className="text-on-surface-variant text-sm leading-relaxed mb-6 flex-1 line-clamp-2">
+        <p className="text-on-surface-variant text-xs leading-relaxed mb-6 flex-1 line-clamp-3">
           {room.extras_desc || "Una hermosa habitación equipada con los mejores lujos de la zona para su máximo descanso."}
         </p>
         
-        <div className="flex gap-4 mb-8">
-          {amenities.slice(0, 4).map((amenity: string, idx: number) => {
-            // Map common amenities to icons
-            let iconStr = "check_circle";
-            if(amenity === 'wifi') iconStr = "wifi";
-            if(amenity === 'bano_privado') iconStr = "bathtub";
-            if(amenity === 'tv_size') iconStr = "tv";
-            if(amenity === 'nevera') iconStr = "kitchen";
-            if(amenity === 'netflix') iconStr = "movie";
-            if(amenity === 'youtube') iconStr = "smart_display";
-            if(amenity === 'espejo') iconStr = "checkroom";
-            if(amenity === 'luces') iconStr = "lightbulb";
+        <div className="flex gap-4 mb-8 flex-wrap">
+          {amenities.slice(0, 6).map((amenity: string, idx: number) => {
+            let Icon = CheckCircle2;
+            if(amenity === 'wifi') Icon = Wifi;
+            if(amenity === 'bano_privado') Icon = Bath;
+            if(amenity === 'tv_size') Icon = Tv;
+            if(amenity === 'netflix') Icon = Film;
+            if(amenity === 'youtube') Icon = MonitorPlay;
+            if(amenity === 'luces') Icon = Lightbulb;
+            if(amenity === 'nevera') Icon = Refrigerator;
+            if(amenity === 'cocina') Icon = ChefHat;
+            if(amenity === 'agua_caliente') Icon = Droplets;
+            if(amenity === 'utensilios') Icon = Utensils;
+            if(amenity === 'limpieza') Icon = Sparkles;
 
-            return <span key={idx} className="material-symbols-outlined text-outline text-lg" data-icon={iconStr}>{iconStr}</span>
+            return (
+              <div key={idx} className="flex flex-col items-center gap-1 group/icon" title={amenity.replace('_', ' ')}>
+                <Icon className="w-5 h-5 text-outline opacity-70 group-hover/icon:opacity-100 transition-opacity" />
+              </div>
+            )
           })}
         </div>
         
-        <div className="flex items-center justify-between mt-auto">
-          <div>
-            <span className="text-xs text-on-surface-variant uppercase tracking-widest">Desde</span>
-            <div className="text-xl font-headline text-primary">{price}</div>
-          </div>
+        <div className="mt-auto pt-4 text-center">
           <a 
-            className="flex items-center gap-2 text-xs font-bold text-on-background hover:text-primary transition-colors uppercase tracking-widest" 
+            className="flex items-center justify-center gap-2 text-xs font-bold text-background bg-primary hover:bg-primary/90 transition-colors uppercase tracking-widest px-6 py-3.5 rounded-xl w-full hover:scale-[1.02] active:scale-[0.98]" 
             href="https://wa.me/34698947098" 
             target="_blank" 
             rel="noreferrer"
           >
-            <span className="material-symbols-outlined text-xl" data-icon="chat">chat</span>
-            Book via WhatsApp
+            Comprobar Disponibilidad
           </a>
         </div>
       </div>
