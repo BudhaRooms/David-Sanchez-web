@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SocialMediaFloater } from "@/components/SocialMediaFloater";
 export const metadata: Metadata = {
-  title: "Budha Rooms Alicante | Supreme Luxury Experience",
-  description: "Exclusividad, confort y la mejor ubicación en el corazón de Alicante.",
+  title: "Budha Rooms Alicante",
+  description: "El mejor alojamiento de toda la provincia de Alicante, descubre nuestras instalaciones.",
   openGraph: {
-    title: "Budha Rooms Alicante | Supreme Luxury Experience",
-    description: "Experimente el corazón vibrante de la ciudad con un entorno de paz absoluta.",
+    title: "Budha Rooms Alicante",
+    description: "El mejor alojamiento de toda la provincia de Alicante, descubre nuestras instalaciones.",
     url: "https://budharooms.es",
     siteName: "Budha Rooms",
     images: [
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Budha Rooms Alicante",
-    description: "Exclusividad y diseño de vanguardia.",
+    description: "El mejor alojamiento de toda la provincia de Alicante.",
   },
 };
 
