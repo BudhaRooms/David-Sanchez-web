@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 export function AdminLogin() {
   const supabase = createClient();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -14,18 +15,16 @@ export function AdminLogin() {
     try {
       setLoading(true);
       setMessage("");
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/admin`,
-        },
+        password,
       });
 
       if (error) throw error;
-      setMessage("¡Correo enviado! Revisa tu bandeja de entrada para entrar de forma segura.");
+      // If success, it automatically updates auth state and unmounts or redirects via onAuthStateChange in parent
     } catch (error) {
       const err = error as { error_description?: string; message: string };
-      setMessage(err.error_description || err.message);
+      setMessage("Credenciales incorrectas o usuario no encontrado.");
     } finally {
       setLoading(false);
     }
@@ -41,7 +40,7 @@ export function AdminLogin() {
 
         <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">Panel Dashboard</h2>
         <p className="text-gray-500 mb-8 text-sm leading-relaxed">
-          Ingresa de forma segura con tu correo. <br/>Te enviaremos un "Magic Link".
+          Ingresa con el usuario y contraseña que definiste en Supabase.
         </p>
 
         <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
@@ -53,7 +52,21 @@ export function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@proyecto.com"
+              placeholder="admin@budharooms.es"
+              required
+              className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 placeholder:text-gray-400 p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all font-medium"
+            />
+          </div>
+
+          <div className="text-left">
+            <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
               required
               className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 placeholder:text-gray-400 p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all font-medium"
             />
@@ -68,8 +81,8 @@ export function AdminLogin() {
           </button>
 
           {message && (
-            <div className="mt-4 p-4 rounded-xl bg-green-50 text-green-800 text-sm font-medium border border-green-100 flex gap-3 text-left leading-relaxed">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mail-check shrink-0 mt-0.5"><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><path d="m16 19 2 2 4-4"/></svg>
+            <div className="mt-4 p-4 rounded-xl bg-red-50 text-red-800 text-sm font-medium border border-red-100 flex gap-3 text-left leading-relaxed">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-circle shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               {message}
             </div>
           )}
