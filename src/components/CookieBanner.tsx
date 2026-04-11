@@ -8,10 +8,14 @@ export function CookieBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookieConsent");
-    if (!consent) {
-      setShow(true);
-    }
+    // Add a slight delay to avoid synchronous setState inside useEffect and make the entrance smoother
+    const timer = setTimeout(() => {
+      const consent = localStorage.getItem("cookieConsent");
+      if (!consent) {
+        setShow(true);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const acceptCookies = () => {
@@ -32,9 +36,9 @@ export function CookieBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-0 left-0 right-0 z-[100] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
+          className="fixed bottom-0 left-0 right-0 z-100 sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
         >
-          <div className="bg-[#111111]/95 backdrop-blur-xl border-t sm:border border-white/10 sm:rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
+          <div className="bg-surface-container-low/95 backdrop-blur-xl border-t sm:border border-white/10 sm:rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
             <h3 className="text-white font-headline text-lg">🍪 Aviso de Cookies</h3>
             <p className="text-on-surface-variant text-sm leading-relaxed font-body font-light">
               Utilizamos cookies propias y de terceros para mejorar tu experiencia, analizar nuestro tráfico y personalizar el contenido. Si continúas navegando, consideramos que aceptas su uso.
