@@ -126,9 +126,7 @@ export default async function Page() {
                        <div className="p-8 md:p-12 text-center h-full flex flex-col justify-between">
                            <div>
                                <h3 className="text-2xl font-headline text-white mb-6 uppercase tracking-widest group-hover:text-primary transition-colors">Corte Inglés</h3>
-                               <p className="text-on-surface-variant text-sm leading-relaxed mb-8 font-body font-light">
-                                   El epicentro del lujo y los negocios. Rodeado de las firmas más exclusivas y con conexiones perfectas.
-                               </p>
+
                            </div>
                            <button className="font-headline text-[10px] uppercase tracking-[0.4em] text-primary border-b border-primary/30 pb-2 hover:border-primary transition-all mt-auto mx-auto inline-block">Ver Disponibilidad</button>
                        </div>
@@ -138,9 +136,7 @@ export default async function Page() {
                        <div className="p-8 md:p-12 text-center h-full flex flex-col justify-between">
                            <div>
                                <h3 className="text-2xl font-headline text-white mb-6 uppercase tracking-widest group-hover:text-primary transition-colors">Mercado Central</h3>
-                               <p className="text-on-surface-variant text-sm leading-relaxed mb-8 font-body font-light">
-                                   Sumerge en la autenticidad alicantina. A pasos del mercado histórico, rodeado de la mejor gastronomía local.
-                               </p>
+
                            </div>
                            <button className="font-headline text-[10px] uppercase tracking-[0.4em] text-primary border-b border-primary/30 pb-2 hover:border-primary transition-all mt-auto mx-auto inline-block">Ver Disponibilidad</button>
                        </div>
@@ -150,9 +146,7 @@ export default async function Page() {
                        <div className="p-8 md:p-12 text-center h-full flex flex-col justify-between">
                            <div>
                                <h3 className="text-2xl font-headline text-white mb-6 uppercase tracking-widest group-hover:text-primary transition-colors">Auditorio</h3>
-                               <p className="text-on-surface-variant text-sm leading-relaxed mb-8 font-body font-light">
-                                   Cultura y modernidad en un entorno sereno. Perfecto para quienes buscan inspiración y tranquilidad.
-                               </p>
+
                            </div>
                            <button className="font-headline text-[10px] uppercase tracking-[0.4em] text-primary border-b border-primary/30 pb-2 hover:border-primary transition-all mt-auto mx-auto inline-block">Ver Disponibilidad</button>
                        </div>
@@ -164,9 +158,7 @@ export default async function Page() {
                        <div className="p-8 md:p-12 text-center h-full flex flex-col justify-between">
                            <div>
                                <h3 className="text-2xl font-headline text-white mb-6 uppercase tracking-widest group-hover:text-primary transition-colors">{z.name}</h3>
-                               <p className="text-on-surface-variant text-sm leading-relaxed mb-8 font-body font-light line-clamp-3">
-                                   {z.desc}
-                               </p>
+
                            </div>
                            <Link href={`/zonas/${z.slug}`} className="font-headline text-[10px] uppercase tracking-[0.4em] text-primary border-b border-primary/30 pb-2 hover:border-primary transition-all mt-auto mx-auto inline-block">Ver Disponibilidad</Link>
                        </div>
