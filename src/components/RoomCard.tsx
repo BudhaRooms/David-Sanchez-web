@@ -77,7 +77,7 @@ export default function RoomCard({ room, href }: RoomCardProps) {
           </div>
           <a 
             className="flex items-center gap-2 text-xs font-bold text-on-background hover:text-primary transition-colors uppercase tracking-widest" 
-            href="https://wa.me/34600000000" 
+            href="https://wa.me/34698947098" 
             target="_blank" 
             rel="noreferrer"
           >

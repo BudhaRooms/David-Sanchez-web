@@ -19,7 +19,7 @@ export function SocialMediaFloater() {
 
       {/* Instagram */}
       <a 
-        href="#"
+        href="https://instagram.com/budha_rooms"
         target="_blank"
         rel="noopener noreferrer"
         title="Síguenos en Instagram"
@@ -30,7 +30,7 @@ export function SocialMediaFloater() {
 
       {/* WhatsApp */}
       <a 
-        href="https://wa.me/34600000000"
+        href="https://wa.me/34698947098"
         target="_blank"
         rel="noopener noreferrer"
         title="Contáctanos por WhatsApp"

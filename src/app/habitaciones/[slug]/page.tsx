@@ -137,7 +137,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                       {/* Action */}
                       <a 
                         className="w-full py-5 bg-primary-container text-on-primary font-bold tracking-widest uppercase text-sm rounded-md transition-all hover:bg-primary hover:-translate-y-1 shadow-xl flex items-center justify-center gap-3"
-                        href="https://wa.me/34600000000" 
+                        href="https://wa.me/34698947098" 
                         target="_blank" 
                         rel="noreferrer"
                       >

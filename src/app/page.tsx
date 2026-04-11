@@ -61,7 +61,7 @@ export default async function Page() {
               <a className="text-neutral-500 hover:text-primary transition-colors" href="#faq"><br/><br/></a>
           </div>
           <div className="flex items-center">
-              <a href="https://wa.me/34600000000" target="_blank" rel="noreferrer" className="gold-gradient-bg text-on-primary px-6 md:px-10 py-2.5 md:py-3 text-[10px] md:text-[11px] font-headline font-black uppercase tracking-[0.2em] md:tracking-[0.4em] hover:brightness-110 transition-all shadow-lg leading-none">Reservar</a>
+              <a href="https://wa.me/34698947098" target="_blank" rel="noreferrer" className="gold-gradient-bg text-on-primary px-6 md:px-10 py-2.5 md:py-3 text-[10px] md:text-[11px] font-headline font-black uppercase tracking-[0.2em] md:tracking-[0.4em] hover:brightness-110 transition-all shadow-lg leading-none">Reservar</a>
           </div>
       </nav>
 
