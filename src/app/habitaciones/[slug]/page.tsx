@@ -63,31 +63,33 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                           <h1 className="font-headline text-4xl md:text-5xl text-on-background mb-6 leading-tight">
                               {room.name}
                           </h1>
-                          <p className="text-on-surface-variant text-base leading-relaxed mb-8">
-                              {room.extras_desc || "Experimente la serenidad en su máxima expresión. Nuestros espacios están meticulosamente diseñados para ofrecer un retiro lejos del ruido exterior."}
-                          </p>
+                          {room.extras_desc && room.extras_desc.trim() !== '' && (
+                            <p className="text-on-surface-variant text-base leading-relaxed mb-8">
+                                {room.extras_desc}
+                            </p>
+                          )}
                       </div>
 
                       {/* Dynamic Amenities */}
                       <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
-                          <h3 className="font-headline text-xl text-on-background mb-6">Amenidades del Santuario</h3>
+                          <h3 className="font-headline text-xl text-on-background mb-6 capitalize">Servicios incluidos</h3>
                           <ul className="space-y-4">
                               {amenities.map((amenity: string, idx: number) => {
                                   let Icon = CheckCircle2;
                                   let label = amenity;
                                   
-                                  if(amenity === 'wifi') { Icon = Wifi; label = "Conexión Inalámbrica Privada"; }
+                                  if(amenity === 'wifi') { Icon = Wifi; label = "Wi-Fi de Alta Velocidad"; }
                                   if(amenity === 'bano_privado') { Icon = Bath; label = "Baño En Suite"; }
-                                  if(amenity === 'tv_size') { Icon = Tv; label = "Pantalla Inteligente"; }
-                                  if(amenity === 'nevera') { Icon = Refrigerator; label = "Mini Bar Personal"; }
-                                  if(amenity === 'netflix') { Icon = Film; label = "Cine bajo demanda"; }
-                                  if(amenity === 'youtube') { Icon = MonitorPlay; label = "Entretenimiento YouTube"; }
+                                  if(amenity === 'tv_size') { Icon = Tv; label = "SmartTV"; }
+                                  if(amenity === 'nevera') { Icon = Refrigerator; label = "Mini Nevera Privada"; }
+                                  if(amenity === 'netflix') { Icon = Film; label = "Netflix"; }
+                                  if(amenity === 'youtube') { Icon = MonitorPlay; label = "YouTube"; }
                                   if(amenity === 'espejo') { Icon = CheckCircle2; label = "Espejo de Cuerpo Entero"; }
                                   if(amenity === 'luces') { Icon = Lightbulb; label = "Iluminación Ambiental Regulable"; }
 
                                   if(amenity === 'ascensor') { Icon = CheckCircle2; label = "Acceso por Ascensor"; }
                                   if(amenity === 'cocina') { Icon = ChefHat; label = "Cocina Equipada"; }
-                                  if(amenity === 'lavadora') { Icon = Sparkles; label = "Servicio de Lavandería"; }
+                                  if(amenity === 'lavadora') { Icon = Sparkles; label = "Lavadora"; }
                                   if(amenity === 'agua_caliente') { Icon = Droplets; label = "Agua Caliente"; }
                                   if(amenity === 'microondas') { Icon = Refrigerator; label = "Horno Microondas"; }
                                   if(amenity === 'utensilios') { Icon = Utensils; label = "Utensilios de Cocina"; }

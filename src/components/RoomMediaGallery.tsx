@@ -54,7 +54,7 @@ export default function RoomMediaGallery({ mediaList, roomName }: RoomMediaGalle
               className="group relative w-full bg-surface-container-highest rounded-none md:rounded-lg overflow-hidden border border-outline-variant/10 shadow-[0_40px_60px_rgba(0,0,0,0.4)] cursor-pointer"
             >
               {isVideo ? (
-                <div className="relative w-full aspect-4/5 sm:aspect-video pointer-events-none">
+                <div className="relative w-full aspect-4/5 sm:aspect-3/4 pointer-events-none bg-black">
                   <video 
                     src={item} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
@@ -70,7 +70,7 @@ export default function RoomMediaGallery({ mediaList, roomName }: RoomMediaGalle
                   </div>
                 </div>
               ) : (
-                <div className="relative w-full aspect-4/5 md:aspect-video overflow-hidden">
+                <div className="relative w-full aspect-4/5 md:aspect-3/4 overflow-hidden bg-black">
                   <img 
                     alt={`${roomName} foto ${idx + 1}`} 
                     src={item} 
