@@ -101,15 +101,15 @@ export function AdminLogin() {
           <form onSubmit={handleVerifyCode} className="w-full flex flex-col gap-4">
             <div className="text-left">
               <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">
-                Código de 6 dígitos
+                Código de seguridad (OTP)
               </label>
               <input
                 type="text"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="000000"
+                placeholder="Ej. 02587392"
                 required
-                maxLength={6}
+                maxLength={8}
                 className="w-full bg-gray-50/50 border border-gray-200 text-gray-900 placeholder:text-gray-400 p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all font-medium text-center text-lg tracking-[0.2em]"
               />
             </div>
