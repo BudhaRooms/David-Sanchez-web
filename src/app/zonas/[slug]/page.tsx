@@ -36,7 +36,7 @@ export default async function ZonePage({ params }: { params: Promise<{ slug: str
   return (
     <main className="min-h-screen bg-background text-on-background font-body">
       <nav className="fixed top-0 w-full z-100 bg-surface/80 backdrop-blur-xl border-b border-surface-container">
-          <div className="flex justify-between items-center px-12 py-6 w-full max-w-[1920px] mx-auto">
+          <div className="flex justify-between items-center px-6 md:px-12 py-4 md:py-6 w-full max-w-[1920px] mx-auto">
               <Link href="/" className="hover:opacity-80 transition-opacity">
                   <img src="/logo_stitch.png" alt="Budha Rooms" className="h-5 md:h-6 object-contain" />
               </Link>
@@ -48,7 +48,7 @@ export default async function ZonePage({ params }: { params: Promise<{ slug: str
       </nav>
 
       {/* Hero Section for Zone */}
-      <section className="relative pt-[150px] pb-24 flex items-center justify-center overflow-hidden bg-surface-container-lowest">
+      <section className="relative pt-[120px] md:pt-[150px] pb-16 md:pb-24 flex items-center justify-center overflow-hidden bg-surface-container-lowest">
           <div className="absolute inset-0 z-0">
               <img 
                 alt={zoneName} 
@@ -58,16 +58,16 @@ export default async function ZonePage({ params }: { params: Promise<{ slug: str
               <div className="absolute inset-0 bg-linear-to-b from-background via-background/40 to-background"></div>
           </div>
           <div className="relative z-10 text-center px-6">
-              <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Zona Exclusiva</span>
-              <h1 className="font-headline text-5xl md:text-7xl lg:text-8xl tracking-tight text-on-background mb-6 drop-shadow-xl">
+              <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-4 block">Zona Exclusiva</span>
+              <h1 className="font-headline text-4xl sm:text-5xl md:text-7xl lg:text-8xl tracking-tight text-on-background mb-4 md:mb-6 drop-shadow-xl">
                   {zoneName}
               </h1>
           </div>
       </section>
 
       {/* Rooms under this zone */}
-      <section className="py-24 px-12 bg-surface-container-low min-h-[50vh]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
+      <section className="py-16 md:py-24 px-6 md:px-12 bg-surface-container-low min-h-[50vh]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 max-w-7xl mx-auto">
               {roomsInZone.length > 0 ? (
                 roomsInZone.map((room) => (
                     <RoomCard key={room.id} room={room} />

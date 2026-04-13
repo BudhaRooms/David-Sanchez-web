@@ -41,7 +41,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   return (
     <main className="min-h-screen bg-background text-on-background font-body">
       <nav className="fixed top-0 w-full z-100 bg-surface/80 backdrop-blur-xl border-b border-surface-container">
-          <div className="flex justify-between items-center px-12 py-6 w-full max-w-[1920px] mx-auto">
+          <div className="flex justify-between items-center px-6 md:px-12 py-4 md:py-6 w-full max-w-[1920px] mx-auto">
               <Link href="/" className="hover:opacity-80 transition-opacity">
                   <img src="/logo_stitch.png" alt="Budha Rooms" className="h-5 md:h-6 object-contain" />
               </Link>
@@ -52,8 +52,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           </div>
       </nav>
 
-      <section className="pt-[120px] pb-32 px-6 md:px-12 max-w-[1920px] mx-auto">
-          <div className="grid grid-cols-12 gap-12 lg:gap-24">
+      <section className="pt-[100px] md:pt-[120px] pb-24 md:pb-32 px-6 md:px-12 max-w-[1920px] mx-auto">
+          <div className="grid grid-cols-12 gap-8 md:gap-12 lg:gap-24">
               
               {/* Media Column */}
               <div className="col-span-12 lg:col-span-8 flex flex-col gap-8 order-2 lg:order-1">
@@ -62,10 +62,10 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
 
               {/* Info Column (Sticky) */}
               <div className="col-span-12 lg:col-span-4 order-1 lg:order-2">
-                  <div className="sticky top-[140px] flex flex-col gap-10">
+                  <div className="sticky top-[140px] flex flex-col gap-8 md:gap-10">
                       <div>
-                          <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs mb-4 block">{parentZone}</span>
-                          <h1 className="font-gothic text-5xl md:text-6xl text-on-background mb-2 leading-tight tracking-normal">
+                          <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-4 block">{parentZone}</span>
+                          <h1 className="font-gothic text-4xl sm:text-5xl md:text-6xl text-on-background mb-2 leading-tight tracking-normal">
                               {room.name}
                           </h1>
                           {room.climate_desc && (
@@ -83,8 +83,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                       {/* Dynamic Amenities */}
                       <div className="flex flex-col gap-6">
                         {roomAmenitiesList.length > 0 && (
-                          <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
-                              <h3 className="font-headline text-xl text-on-background mb-6 capitalize">Servicios de la Habitación</h3>
+                          <div className="bg-surface-container/50 p-6 md:p-8 rounded-lg border border-outline-variant/10">
+                              <h3 className="font-headline text-lg md:text-xl text-on-background mb-6 capitalize">Servicios de la Habitación</h3>
                               <ul className="space-y-4">
                                   {roomAmenitiesList.map((amenity: string, idx: number) => {
                                       const amenityInfo = getAmenity(amenity);
@@ -104,8 +104,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                         )}
 
                         {generalAmenitiesList.length > 0 && (
-                          <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
-                              <h3 className="font-headline text-xl text-on-background mb-6 capitalize">Servicios Generales Incluidos</h3>
+                          <div className="bg-surface-container/50 p-6 md:p-8 rounded-lg border border-outline-variant/10">
+                              <h3 className="font-headline text-lg md:text-xl text-on-background mb-6 capitalize">Servicios Generales Incluidos</h3>
                               <ul className="space-y-4">
                                   {generalAmenitiesList.map((amenity: string, idx: number) => {
                                       const amenityInfo = getAmenity(amenity);
@@ -125,7 +125,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                         )}
 
                         {amenities.length === 0 && (
-                            <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
+                            <div className="bg-surface-container/50 p-6 md:p-8 rounded-lg border border-outline-variant/10">
                               <p className="text-sm text-on-surface-variant opacity-60">Consultar comodidades incluidas</p>
                             </div>
                         )}
