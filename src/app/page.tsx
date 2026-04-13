@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import { CheckCircle2, Droplets, Wifi, Bath, Tv, Refrigerator, ChefHat, Utensils, Sparkles, Film, MonitorPlay, Lightbulb } from 'lucide-react';
+import { CheckCircle2, Droplets, Wifi, Bath, Tv, Refrigerator, Sparkles } from 'lucide-react';
 import { getAmenity } from '@/utils/amenitiesData';
 
 export const revalidate = 0;
@@ -185,7 +185,7 @@ export default async function Page() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 md:mb-36 gap-10">
                 <div className="border-l-[6px] md:border-l-12 border-primary pl-6 md:pl-12 max-w-4xl">
                     <p className="text-on-surface-variant font-body text-sm md:text-lg leading-relaxed mb-6 md:mb-8 font-light text-pretty opacity-90">
-                      "A nivel espiritual, Budha es el máximo exponente del equilibrio humano. Hemos convertido su rostro en nuestra identidad porque creemos en el poder de los espacios en los que estamos. Su imagen transmite una energía silenciosa pero poderosa que purifica la energía del lugar. Somos Budha porque nuestro mayor propósito es que, al cruzar nuestras puertas, te encuentres con un lugar donde la buena energía y las vibras positivas las puedas sentir en cada momento de tu estancia."
+                      &quot;A nivel espiritual, Budha es el máximo exponente del equilibrio humano. Hemos convertido su rostro en nuestra identidad porque creemos en el poder de los espacios en los que estamos. Su imagen transmite una energía silenciosa pero poderosa que purifica la energía del lugar. Somos Budha porque nuestro mayor propósito es que, al cruzar nuestras puertas, te encuentres con un lugar donde la buena energía y las vibras positivas las puedas sentir en cada momento de tu estancia.&quot;
                     </p>
                     <p className="text-primary text-xl md:text-3xl italic font-serif-headline font-light tracking-wide opacity-80">Diseño de vanguardia, confort y lujo.</p>
                 </div>
