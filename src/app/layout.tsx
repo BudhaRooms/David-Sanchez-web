@@ -3,12 +3,17 @@ import "./globals.css";
 import { SocialMediaFloater } from "@/components/SocialMediaFloater";
 import { CookieBanner } from "@/components/CookieBanner";
 export const metadata: Metadata = {
+  metadataBase: new URL("https://budharooms.com"),
   title: "Budha Rooms Alicante",
   description: "El mejor alojamiento de toda la provincia de Alicante, descubre nuestras instalaciones.",
+  icons: {
+    icon: "/logo_stitch.png",
+    apple: "/logo_stitch.png"
+  },
   openGraph: {
     title: "Budha Rooms Alicante",
     description: "El mejor alojamiento de toda la provincia de Alicante, descubre nuestras instalaciones.",
-    url: "https://budharooms.es",
+    url: "https://budharooms.com",
     siteName: "Budha Rooms",
     images: [
       {
