@@ -16,6 +16,8 @@ export default function AdminPage() {
   const [accommodations, setAccommodations] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editingRoom, setEditingRoom] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,13 +39,20 @@ export default function AdminPage() {
 
   async function fetchAccommodations() {
     setLoadingData(true);
+    // Order by size explicitly if we use it for sorting order
     const { data, error } = await supabase
       .from("accommodations")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*");
 
     if (!error && data) {
-      setAccommodations(data);
+      // Sort in frontend by numeric value of size safely, fallback to created_at
+      const sorted = data.sort((a, b) => {
+        const orderA = a.size ? parseInt(a.size, 10) : Number.MAX_SAFE_INTEGER;
+        const orderB = b.size ? parseInt(b.size, 10) : Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setAccommodations(sorted);
     }
     setLoadingData(false);
   };
@@ -102,7 +111,7 @@ export default function AdminPage() {
             <p className="text-gray-500 mt-1">Gestiona el contenido, precios y fotos multimedia de tus catálogos.</p>
           </div>
           <button 
-            onClick={() => setShowModal(true)}
+            onClick={() => { setEditingRoom(null); setShowModal(true); }}
             className="flex items-center justify-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-black hover:shadow-md hover:-translate-y-0.5 transition-all w-full sm:w-auto"
           >
             <Plus className="w-5 h-5" /> Nueva Propiedad
@@ -126,7 +135,7 @@ export default function AdminPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Sin Alojamientos Aún</h3>
               <p className="text-gray-500 max-w-sm mb-6">Tu catálogo web está vacío. Agrega tu primer cuarto o apartamento para verlo en vivo.</p>
-              <button onClick={() => setShowModal(true)} className="bg-white border border-gray-200 text-gray-900 font-semibold px-6 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+              <button onClick={() => { setEditingRoom(null); setShowModal(true); }} className="bg-white border border-gray-200 text-gray-900 font-semibold px-6 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
                 Crear Propiedad
               </button>
             </div>
@@ -167,6 +176,7 @@ export default function AdminPage() {
                   {/* Meta */}
                   <div className="p-5 flex-1 flex flex-col">
                     <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1">{acc.name}</h3>
+                    {acc.climate_desc && <span className="text-xs text-primary font-bold mb-1 block uppercase tracking-wide">{acc.climate_desc}</span>}
                     <p className="text-sm text-gray-500 mb-4 line-clamp-2">{acc.extras_desc || 'Sin descripción'}</p>
                     
                     <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
@@ -179,13 +189,22 @@ export default function AdminPage() {
                         <Eye className="w-4 h-4" /> Ver Preview
                       </a>
                       
-                      <button 
-                        onClick={() => handleDelete(acc.id, acc.name)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Eliminar alojamiento"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      <div className="flex gap-1.5 focus:outline-none">
+                        <button 
+                          onClick={() => { setEditingRoom(acc); setShowModal(true); }}
+                          className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1.5"
+                          title="Editar anuncio"
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(acc.id, acc.name)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar alojamiento"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -197,9 +216,11 @@ export default function AdminPage() {
 
       {showModal && (
         <RoomFormModal 
+          initialData={editingRoom}
           onClose={() => setShowModal(false)} 
           onSuccess={() => {
             setShowModal(false);
+            setEditingRoom(null);
             fetchAccommodations();
           }} 
         />

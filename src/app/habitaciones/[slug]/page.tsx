@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import RoomMediaGallery from '@/components/RoomMediaGallery';
-import { ArrowLeft, CheckCircle2, Wifi, Bath, Tv, MonitorPlay, Lightbulb, Refrigerator, ChefHat, Droplets, Utensils, Sparkles, Film, Lock } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Lock } from 'lucide-react';
+import { getAmenity, ROOM_AMENITIES, GENERAL_AMENITIES } from '@/utils/amenitiesData';
 
 export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -33,6 +34,10 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   const photos = gallery.filter((m: string) => !(m.toLowerCase().includes('.mp4') || m.toLowerCase().includes('.mov') || m.toLowerCase().includes('video'))).slice(0, 5);
   const mediaToShow = [...videos, ...photos];
 
+  // Separate Room and General amenities while maintaining order
+  const roomAmenitiesList = amenities.filter((a: string) => ROOM_AMENITIES.some(ra => ra.id === a));
+  const generalAmenitiesList = amenities.filter((a: string) => GENERAL_AMENITIES.some(ga => ga.id === a));
+
   return (
     <main className="min-h-screen bg-background text-on-background font-body">
       <nav className="fixed top-0 w-full z-100 bg-surface/80 backdrop-blur-xl border-b border-surface-container">
@@ -60,9 +65,14 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                   <div className="sticky top-[140px] flex flex-col gap-10">
                       <div>
                           <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs mb-4 block">{parentZone}</span>
-                          <h1 className="font-headline text-4xl md:text-5xl text-on-background mb-6 leading-tight">
+                          <h1 className="font-gothic text-5xl md:text-6xl text-on-background mb-2 leading-tight tracking-normal">
                               {room.name}
                           </h1>
+                          {room.climate_desc && (
+                            <span className="text-primary font-bold text-sm tracking-widest uppercase mb-6 block">
+                              {room.climate_desc}
+                            </span>
+                          )}
                           {room.extras_desc && room.extras_desc.trim() !== '' && (
                             <p className="text-on-surface-variant text-base leading-relaxed mb-8">
                                 {room.extras_desc}
@@ -71,43 +81,54 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
                       </div>
 
                       {/* Dynamic Amenities */}
-                      <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
-                          <h3 className="font-headline text-xl text-on-background mb-6 capitalize">Servicios incluidos</h3>
-                          <ul className="space-y-4">
-                              {amenities.map((amenity: string, idx: number) => {
-                                  let Icon = CheckCircle2;
-                                  let label = amenity;
-                                  
-                                  if(amenity === 'wifi') { Icon = Wifi; label = "Wi-Fi de Alta Velocidad"; }
-                                  if(amenity === 'bano_privado') { Icon = Bath; label = "Baño En Suite"; }
-                                  if(amenity === 'tv_size') { Icon = Tv; label = "SmartTV"; }
-                                  if(amenity === 'nevera') { Icon = Refrigerator; label = "Mini Nevera Privada"; }
-                                  if(amenity === 'netflix') { Icon = Film; label = "Netflix"; }
-                                  if(amenity === 'youtube') { Icon = MonitorPlay; label = "YouTube"; }
-                                  if(amenity === 'espejo') { Icon = CheckCircle2; label = "Espejo de Cuerpo Entero"; }
-                                  if(amenity === 'luces') { Icon = Lightbulb; label = "Iluminación Ambiental Regulable"; }
+                      <div className="flex flex-col gap-6">
+                        {roomAmenitiesList.length > 0 && (
+                          <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
+                              <h3 className="font-headline text-xl text-on-background mb-6 capitalize">Servicios de la Habitación</h3>
+                              <ul className="space-y-4">
+                                  {roomAmenitiesList.map((amenity: string, idx: number) => {
+                                      const amenityInfo = getAmenity(amenity);
+                                      const Icon = amenityInfo.icon || CheckCircle2;
 
-                                  if(amenity === 'ascensor') { Icon = CheckCircle2; label = "Acceso por Ascensor"; }
-                                  if(amenity === 'cocina') { Icon = ChefHat; label = "Cocina Equipada"; }
-                                  if(amenity === 'lavadora') { Icon = Sparkles; label = "Lavadora"; }
-                                  if(amenity === 'agua_caliente') { Icon = Droplets; label = "Agua Caliente"; }
-                                  if(amenity === 'microondas') { Icon = Refrigerator; label = "Horno Microondas"; }
-                                  if(amenity === 'utensilios') { Icon = Utensils; label = "Utensilios de Cocina"; }
-                                  if(amenity === 'limpieza') { Icon = Sparkles; label = "Productos de Limpieza"; }
+                                      return (
+                                        <li key={idx} className="flex items-center gap-4 text-on-surface-variant group">
+                                            <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/10 group-hover:scale-110 transition-transform">
+                                              <Icon className="w-4 h-4 text-primary opacity-90" />
+                                            </div>
+                                            <span className="text-sm tracking-wide">{amenityInfo.label}</span>
+                                        </li>
+                                      )
+                                  })}
+                              </ul>
+                          </div>
+                        )}
 
-                                  return (
-                                    <li key={idx} className="flex items-center gap-4 text-on-surface-variant group">
-                                        <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/10 group-hover:scale-110 transition-transform">
-                                          <Icon className="w-4 h-4 text-primary opacity-90" />
-                                        </div>
-                                        <span className="text-sm tracking-wide">{label}</span>
-                                    </li>
-                                  )
-                              })}
-                              {amenities.length === 0 && (
-                                  <li className="text-sm text-on-surface-variant opacity-60">Consultar comodidades incluidas</li>
-                              )}
-                          </ul>
+                        {generalAmenitiesList.length > 0 && (
+                          <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
+                              <h3 className="font-headline text-xl text-on-background mb-6 capitalize">Servicios Generales Incluidos</h3>
+                              <ul className="space-y-4">
+                                  {generalAmenitiesList.map((amenity: string, idx: number) => {
+                                      const amenityInfo = getAmenity(amenity);
+                                      const Icon = amenityInfo.icon || CheckCircle2;
+
+                                      return (
+                                        <li key={idx} className="flex items-center gap-4 text-on-surface-variant group">
+                                            <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/10 group-hover:scale-110 transition-transform">
+                                              <Icon className="w-4 h-4 text-blue-400 opacity-90" />
+                                            </div>
+                                            <span className="text-sm tracking-wide">{amenityInfo.label}</span>
+                                        </li>
+                                      )
+                                  })}
+                              </ul>
+                          </div>
+                        )}
+
+                        {amenities.length === 0 && (
+                            <div className="bg-surface-container/50 p-8 rounded-lg border border-outline-variant/10">
+                              <p className="text-sm text-on-surface-variant opacity-60">Consultar comodidades incluidas</p>
+                            </div>
+                        )}
                       </div>
 
                       {/* Action */}

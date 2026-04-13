@@ -3,7 +3,8 @@ import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import { CheckCircle2, Wifi, Bath, Tv, MonitorPlay, Lightbulb, Refrigerator, ChefHat, Droplets, Utensils, Sparkles, Film } from 'lucide-react';
+import { CheckCircle2, Droplets, Wifi, Bath, Tv, Refrigerator, ChefHat, Utensils, Sparkles, Film, MonitorPlay, Lightbulb } from 'lucide-react';
+import { getAmenity } from '@/utils/amenitiesData';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -12,12 +13,16 @@ export default async function Page() {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  const { data: accommodations } = await supabase
+  const { data: accommodationsraw } = await supabase
     .from('accommodations')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .select('*');
 
-  const allAccommodations = accommodations || [];
+  const allAccommodations = accommodationsraw?.sort((a, b) => {
+    const orderA = a.size ? parseInt(a.size, 10) : Number.MAX_SAFE_INTEGER;
+    const orderB = b.size ? parseInt(b.size, 10) : Number.MAX_SAFE_INTEGER;
+    if (orderA !== orderB) return orderA - orderB;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  }) || [];
 
   // ZONAS (Generadas dinámicamente según la ubicación puesta a cada habitación)
   const dynamicZones: { id: string; slug: string; name: string; coverImage: string; desc: string; }[] = [];
@@ -239,25 +244,8 @@ export default async function Page() {
                         const heroMedia = room.media_gallery && room.media_gallery.length > 0 ? room.media_gallery[0] : "https://lh3.googleusercontent.com/aida-public/AB6AXuCmqRZktc56JLcNtglo9PJEQthjMx4XrtXwfQwg8HklS-EuKUCynsTz3vIfa-lK08-_p1Qhyt9yiH9wkuyGYC_LKdjJtit7mqdhTtw3pKxEjTnPfpPou6RxsttvIWNvoI_5Ek4qx23PbferzlO4CoqpXhwqUVJ09SUstmK20HFBqfQgivI-kWDu1eICZw3TdCjyIl8YOj-poEpvo1h9V5sZHFn3eZ8vQjGUqU6bdO_P1J5Ehm948x2lS-68UVh-cNyty2q_7QQ3yFY";
                         const isVideo = heroMedia.toLowerCase().includes('.mp4') || heroMedia.toLowerCase().includes('.mov') || heroMedia.toLowerCase().includes('.webm');
 
-                        // Extraer 3 amenities max para mostrarlos aquí
-                        const listAmenities = (room.amenities || []).slice(0, 3);
-
-                        // Icon mapper refactorizado
-                        const getIcon = (amenity: string) => {
-                            let Icon = CheckCircle2;
-                            if(amenity === 'wifi') Icon = Wifi;
-                            if(amenity === 'bano_privado') Icon = Bath;
-                            if(amenity === 'tv_size') Icon = Tv;
-                            if(amenity === 'netflix') Icon = Film;
-                            if(amenity === 'youtube') Icon = MonitorPlay;
-                            if(amenity === 'luces') Icon = Lightbulb;
-                            if(amenity === 'nevera') Icon = Refrigerator;
-                            if(amenity === 'cocina') Icon = ChefHat;
-                            if(amenity === 'agua_caliente') Icon = Droplets;
-                            if(amenity === 'utensilios') Icon = Utensils;
-                            if(amenity === 'limpieza') Icon = Sparkles;
-                            return Icon;
-                        };
+                        // Extraer 5 amenities max para mostrarlos aquí
+                        const listAmenities = (room.amenities || []).slice(0, 5);
 
                         return (
                           <div key={room.id} className="group bg-surface-container-lowest border border-white/5 hover:border-primary/40 transition-all duration-700">
@@ -270,11 +258,17 @@ export default async function Page() {
                                   <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent opacity-80 z-10"></div>
                               </div>
                               <div className="p-8 md:p-14 border-t border-white/5 flex flex-col justify-between h-auto">
-                                  <h3 className="font-headline text-2xl md:text-3xl mb-8 md:mb-10 text-white uppercase tracking-[0.15em] md:tracking-[0.2em]">{room.name}</h3>
+                                  <h3 className="font-gothic text-3xl sm:text-4xl mb-1 text-white hover:text-primary transition-colors tracking-normal">{room.name}</h3>
+                                  {room.climate_desc && (
+                                    <span className="text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest mb-8 block">
+                                      {room.climate_desc}
+                                    </span>
+                                  )}
                                   <div className="flex justify-between md:justify-start gap-6 md:gap-8 mb-10 md:mb-14 text-[11px] md:text-[12px] font-headline uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary/60 border-y border-white/10 py-5 md:py-6 flex-wrap">
                                       {listAmenities.map((am: string, i: number) => {
-                                          const Icon = getIcon(am);
-                                          return <div key={i} title={am.replace('_', ' ')}><Icon className="w-5 h-5 text-primary/80 transition-all hover:text-white" /></div>;
+                                          const amenityInfo = getAmenity(am);
+                                          const Icon = amenityInfo.icon || CheckCircle2;
+                                          return <div key={i} title={amenityInfo.label}><Icon className="w-5 h-5 text-primary/80 transition-all hover:text-white" /></div>;
                                       })}
                                   </div>
                                   <Link href={`/habitaciones/${room.slug}`} className="w-full py-5 md:py-6 bg-transparent border border-primary/50 text-center text-primary font-headline font-black text-[11px] md:text-[12px] uppercase tracking-[0.3em] md:tracking-[0.5em] hover:bg-primary hover:text-on-primary transition-all inline-block mt-auto">
