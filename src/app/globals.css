@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Cinzel+Decorative:wght@400;700;900&family=Noto+Serif:ital,wght@0,300;0,400;0,700;1,400&family=Marcellus&family=Manrope:wght@300;400;600&family=UnifrakturMaguntia&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Cinzel+Decorative:wght@400;700;900&family=Noto+Serif:ital,wght@0,300;0,400;0,700;1,400&family=Marcellus&family=Manrope:wght@300;400;600&family=Pirata+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 
@@ -50,11 +50,11 @@
   --color-tertiary-fixed-dim: #b4c5ff;
   --color-secondary-fixed: #e8e2d6;
   --color-tertiary: #bfcdff;
-  --font-headline: 'Cinzel Decorative', 'serif';
-  --font-body: 'Manrope', 'sans-serif';
-  --font-display: 'Abril Fatface', 'cursive';
-  --font-serif-headline: 'Noto Serif', 'serif';
-  --font-gothic: 'UnifrakturMaguntia', 'cursive';
+  --font-headline: 'Cinzel Decorative', serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-display: 'Abril Fatface', cursive;
+  --font-serif-headline: 'Noto Serif', serif;
+  --font-gothic: 'Pirata One', system-ui;
 }
 
 .material-symbols-outlined {
