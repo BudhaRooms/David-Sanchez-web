@@ -124,7 +124,7 @@ export default async function Page() {
                     </div>
                     <div className="h-px w-16 md:w-32 bg-linear-to-l from-transparent to-primary/60"></div>
                 </div>
-                <p className="text-on-surface-variant mt-10 md:mt-16 max-w-3xl mx-auto text-lg md:text-2xl font-serif-headline italic font-light leading-relaxed px-4 md:px-0">Descubre nuestras ubicaciones más emblemáticas en los puntos clave de Alicante, donde el lujo y la comodidad se encuentran.</p>
+                <p className="text-on-surface-variant mt-10 md:mt-16 max-w-3xl mx-auto text-lg md:text-2xl font-serif-headline italic font-light leading-relaxed px-4 md:px-0"><br/></p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
