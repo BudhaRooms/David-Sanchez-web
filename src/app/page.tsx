@@ -316,7 +316,7 @@ export default async function Page() {
                             </div>
                             <div>
                                 <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Confort</h4>
-                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Habitaciones insonorizadas, colchones de máxima gama y climatización perfecta para garantizar tu descanso absoluto.</p>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm"><br/></p>
                             </div>
                         </div>
                         <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
@@ -327,7 +327,7 @@ export default async function Page() {
                             </div>
                             <div>
                                 <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Privacidad</h4>
-                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Accesos cien por ciento autónomos y sistemas de seguridad inteligentes que resguardan tu tranquilidad.</p>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm"><br/></p>
                             </div>
                         </div>
                         <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
@@ -338,7 +338,7 @@ export default async function Page() {
                             </div>
                             <div>
                                 <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Experiencia</h4>
-                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Cada rincón está meticulosamente diseñado para sumergirte en una atmósfera zen de máximo lujo y relajación visual.</p>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm"><br/></p>
                             </div>
                         </div>
                         <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
@@ -349,7 +349,7 @@ export default async function Page() {
                             </div>
                             <div>
                                 <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Ubicación</h4>
-                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Situado estratégicamente en la zona premium de Alicante, a solo pasos de los lugares más emblemáticos.</p>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm"><br/></p>
                             </div>
                         </div>
                     </div>
