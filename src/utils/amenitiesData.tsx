@@ -1,12 +1,12 @@
 import { 
-  Wind, ThermometerSun, Tv, Lock, ShieldCheck, DoorOpen, Wifi, 
+  Snowflake, ThermometerSun, Tv, Lock, ShieldCheck, DoorOpen, Wifi, 
   Maximize, Refrigerator, Bath, Lightbulb, BedSingle, Layers, Sun, Moon, 
   ChefHat, Utensils, Flame, ConciergeBell, Coffee, Sparkles, Wind as WindIcon, 
   Droplets, ArrowUpDown, Accessibility, Brush, CheckCircle2 
 } from 'lucide-react';
 
 export const ROOM_AMENITIES = [
-  { id: 'aire_acondicionado', label: 'Aire Acondicionado', icon: Wind },
+  { id: 'aire_acondicionado', label: 'Aire Acondicionado', icon: Snowflake },
   { id: 'calefaccion', label: 'Calefacción', icon: ThermometerSun },
   { id: 'tv_50', label: "TV Smart (50')", icon: Tv },
   { id: 'tv_55', label: "TV Smart (55')", icon: Tv },
