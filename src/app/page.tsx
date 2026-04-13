@@ -286,7 +286,7 @@ export default async function Page() {
       </section>
 
       {/* ----------------- EXPERIENCIA ----------------- */}
-      <section id="experiencia" className="py-24 md:py-48 black-marble relative overflow-hidden">
+      <section id="experiencia" className="py-24 md:py-48 bg-black black-marble relative overflow-hidden">
         <img alt="watermark" className="watermark-logo -left-40 bottom-20 w-[400px] md:w-[800px] rotate-12" src="/logo_stitch.png"/>
         <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
             <div className="grid lg:grid-cols-2 gap-20 md:gap-40 items-center">
@@ -299,57 +299,57 @@ export default async function Page() {
                     <div className="absolute -bottom-6 md:-bottom-12 -right-6 md:-right-12 w-32 md:w-64 h-32 md:h-64 border border-primary/20 pointer-events-none hidden sm:block"></div>
                     <div className="absolute -top-6 md:-top-12 -left-6 md:-left-12 w-32 md:w-64 h-32 md:h-64 border border-primary/20 pointer-events-none hidden sm:block"></div>
                 </div>
-                <div className="order-1 lg:order-2 space-y-10 md:space-y-16">
-                    <div className="inline-block border-y border-primary/40 py-4 md:py-6 px-6 md:px-10">
-                        <span className="font-headline text-primary tracking-[0.4em] md:tracking-[0.7em] uppercase text-[9px] md:text-[10px] font-black">Auténtico Lujo en Alicante</span>
+                <div className="order-1 lg:order-2 space-y-10 md:space-y-16 relative z-20">
+                    <div className="inline-block border-y border-primary/40 py-4 md:py-6 px-6 md:px-10 bg-black/40 backdrop-blur-sm rounded-lg">
+                        <span className="font-headline text-primary tracking-[0.4em] md:tracking-[0.7em] uppercase text-[9px] md:text-[10px] font-black drop-shadow-md">Auténtico Lujo en Alicante</span>
                     </div>
-                    <h2 className="font-headline text-xl sm:text-3xl lg:text-6xl text-on-surface leading-tight lg:leading-[1.1] uppercase gold-glow text-balance w-full">+15 Años de Experiencia</h2>
-                    <p className="text-on-surface-variant font-serif-headline text-lg md:text-xl leading-relaxed italic border-l-4 md:border-l-8 border-primary pl-6 md:pl-12 opacity-90 font-light">
-                        En Budha Rooms, cada detalle ha sido orquestado para ofrecerte una experiencia de lujo
+                    <h2 className="font-headline text-2xl sm:text-4xl lg:text-6xl text-white leading-tight lg:leading-[1.1] uppercase gold-glow text-balance w-full drop-shadow-xl">+15 Años de Experiencia</h2>
+                    <p className="text-white font-serif-headline text-lg md:text-2xl leading-relaxed italic border-l-4 md:border-l-8 border-primary pl-6 md:pl-12 drop-shadow-lg font-medium bg-black/20 p-2 rounded-r-lg">
+                        En Budha Rooms, cada detalle ha sido orquestado para ofrecerte una experiencia de lujo.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 md:gap-16 pt-8 md:pt-16">
-                        <div className="flex items-start gap-6 md:gap-10 group">
-                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/30 rotate-45 group-hover:bg-primary/10 transition-all duration-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                        <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
+                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/50 bg-black/40 rotate-45 group-hover:bg-primary/20 transition-all duration-500 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 22l10-10"/>
                                 </svg>
                             </div>
                             <div>
-                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[12px] md:text-sm mb-2 md:mb-4">Confort</h4>
-                                <p className="text-on-surface-variant font-body text-base md:text-lg opacity-70 font-light leading-relaxed"><br/></p>
+                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Confort</h4>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Habitaciones insonorizadas, colchones de máxima gama y climatización perfecta para garantizar tu descanso absoluto.</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-6 md:gap-10 group">
-                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/30 rotate-45 group-hover:bg-primary/10 transition-all duration-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                        <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
+                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/50 bg-black/40 rotate-45 group-hover:bg-primary/20 transition-all duration-500 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                     <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                 </svg>
                             </div>
                             <div>
-                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[12px] md:text-sm mb-2 md:mb-4">Privacidad</h4>
-                                <p className="text-on-surface-variant font-body text-base md:text-lg opacity-70 font-light leading-relaxed"><br/></p>
+                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Privacidad</h4>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Accesos cien por ciento autónomos y sistemas de seguridad inteligentes que resguardan tu tranquilidad.</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-6 md:gap-10 group">
-                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/30 rotate-45 group-hover:bg-primary/10 transition-all duration-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                        <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
+                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/50 bg-black/40 rotate-45 group-hover:bg-primary/20 transition-all duration-500 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13"/><path d="M13 3l3 6-4 13"/>
                                 </svg>
                             </div>
                             <div>
-                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[12px] md:text-sm mb-2 md:mb-4">Experiencia</h4>
-                                <p className="text-on-surface-variant font-body text-base md:text-lg opacity-70 font-light leading-relaxed"><br/></p>
+                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Experiencia</h4>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Cada rincón está meticulosamente diseñado para sumergirte en una atmósfera zen de máximo lujo y relajación visual.</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-6 md:gap-10 group">
-                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/30 rotate-45 group-hover:bg-primary/10 transition-all duration-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                        <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
+                            <div className="w-16 md:w-20 h-16 md:h-20 shrink-0 flex items-center justify-center border border-primary/50 bg-black/40 rotate-45 group-hover:bg-primary/20 transition-all duration-500 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-rotate-45 w-8 h-8 md:w-10 md:h-10 text-primary drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
                                 </svg>
                             </div>
                             <div>
-                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[12px] md:text-sm mb-2 md:mb-4">Ubicación</h4>
-                                <p className="text-on-surface-variant font-body text-base md:text-lg opacity-70 font-light leading-relaxed"><br/></p>
+                                <h4 className="font-headline font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] text-[13px] md:text-sm mb-2 md:mb-4 drop-shadow-md">Ubicación</h4>
+                                <p className="text-white font-body text-base md:text-lg font-medium leading-relaxed drop-shadow-sm">Situado estratégicamente en la zona premium de Alicante, a solo pasos de los lugares más emblemáticos.</p>
                             </div>
                         </div>
                     </div>
