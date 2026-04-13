@@ -183,8 +183,10 @@ export default async function Page() {
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
         <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 md:mb-36 gap-10">
-                <div className="border-l-[6px] md:border-l-12 border-primary pl-6 md:pl-12">
-                    <h2 className="font-headline text-4xl md:text-[7rem] mb-4 md:mb-8 uppercase text-white gold-glow leading-tight"><br/></h2>
+                <div className="border-l-[6px] md:border-l-12 border-primary pl-6 md:pl-12 max-w-4xl">
+                    <p className="text-on-surface-variant font-body text-sm md:text-lg leading-relaxed mb-6 md:mb-8 font-light text-pretty opacity-90">
+                      "A nivel espiritual, Budha es el máximo exponente del equilibrio humano. Hemos convertido su rostro en nuestra identidad porque creemos en el poder de los espacios en los que estamos. Su imagen transmite una energía silenciosa pero poderosa que purifica la energía del lugar. Somos Budha porque nuestro mayor propósito es que, al cruzar nuestras puertas, te encuentres con un lugar donde la buena energía y las vibras positivas las puedas sentir en cada momento de tu estancia."
+                    </p>
                     <p className="text-primary text-xl md:text-3xl italic font-serif-headline font-light tracking-wide opacity-80">Diseño de vanguardia, confort y lujo.</p>
                 </div>
                 <Link href="#zonas" className="font-headline text-[11px] md:text-[12px] text-primary font-black border-b-2 border-primary pb-3 md:pb-4 hover:text-white hover:border-white transition-all uppercase tracking-[0.3em] md:tracking-[0.5em]">Catálogo Completo</Link>
