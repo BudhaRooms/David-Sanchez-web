@@ -155,19 +155,16 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingMusic(true);
-    const filename = `music-${Date.now()}.mp3`;
+    const filename = `music/${Date.now()}.mp3`;
     
-    // Attempt to create bucket if it doesn't exist (ignores error if it does)
-    await supabase.storage.createBucket('music', { public: true });
-    
-    const { error } = await supabase.storage.from('music').upload(filename, file);
+    const { error } = await supabase.storage.from('media').upload(filename, file);
     if (error) {
       alert("Error subiendo música: " + error.message);
       setUploadingMusic(false);
       return;
     }
     if (!settingsId) return;
-    const publicUrl = supabase.storage.from('music').getPublicUrl(filename).data.publicUrl;
+    const publicUrl = supabase.storage.from('media').getPublicUrl(filename).data.publicUrl;
     const { error: dbError } = await supabase.from('global_settings').update({ music_url: publicUrl }).eq('id', settingsId);
     if (dbError) {
       alert("Error actualizando url: " + dbError.message);
@@ -220,10 +217,20 @@ export default function AdminPage() {
 
   const handleAddEmergency = async () => {
     if (!newEmergency.name || !newEmergency.phone) return;
-    const { error } = await supabase.from('emergency_numbers').insert([newEmergency]);
-    if (!error) {
-       setNewEmergency({ name: '', phone: '', icon: 'phone', note: '' });
-       fetchEmergencies();
+    if ((newEmergency as any).id) {
+      const { id, ...updateData } = newEmergency as any;
+      const { error } = await supabase.from('emergency_numbers').update(updateData).eq('id', id);
+      if (!error) {
+         setNewEmergency({ name: '', phone: '', icon: 'call', note: '' });
+         fetchEmergencies();
+      }
+    } else {
+      const { ...insertData } = newEmergency;
+      const { error } = await supabase.from('emergency_numbers').insert([insertData]);
+      if (!error) {
+         setNewEmergency({ name: '', phone: '', icon: 'call', note: '' });
+         fetchEmergencies();
+      }
     }
   };
 
@@ -483,9 +490,9 @@ export default function AdminPage() {
                 </div>
              </div>
 
-             {loadingPois ? <p className="text-gray-500 p-4">Cargando datos principales...</p> : categories.filter(c => c.zone === activeZone).length === 0 ? <p className="text-gray-500 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl">No hay categorías en esta zona. ¡Crea la primera arriba!</p> : (
+             {loadingPois ? <p className="text-gray-500 p-4">Cargando datos principales...</p> : categories.filter(c => activeZone === 'Recomendaciones Globales' ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone)) : c.zone === activeZone).length === 0 ? <p className="text-gray-500 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl">No hay categorías en esta zona. ¡Crea la primera arriba!</p> : (
                <div className="space-y-8">
-                 {categories.filter(c => c.zone === activeZone).map(cat => {
+                 {categories.filter(c => activeZone === 'Recomendaciones Globales' ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone)) : c.zone === activeZone).map(cat => {
                    const catPois = pois.filter(p => p.category_id === cat.id);
                    return (
                      <div key={cat.id} className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
@@ -518,7 +525,14 @@ export default function AdminPage() {
                                 
                                 <div className="mt-4 pt-3 border-t border-gray-200 w-full flex justify-between">
                                    <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline"><MapPin className="w-3 h-3"/> Mapa</a>
-                                   <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold hover:underline">Eliminar</button>
+                                   <div className="flex gap-2">
+                                      <button onClick={() => {
+                                        (window as any).editPoiData = p;
+                                        setSelectedCategoryId(cat.id);
+                                        setShowPoiModal(true);
+                                      }} className="text-xs text-gray-500 font-semibold hover:underline">Editar</button>
+                                      <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold hover:underline">Eliminar</button>
+                                    </div>
                                 </div>
                              </div>
                            ))}
@@ -541,10 +555,16 @@ export default function AdminPage() {
               <input type="text" value={newEmergency.phone} onChange={e => setNewEmergency({...newEmergency, phone: e.target.value})} placeholder="Teléfono" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none flex-1"/>
               <input type="text" value={newEmergency.icon} onChange={e => setNewEmergency({...newEmergency, icon: e.target.value})} placeholder="Icono (ej. local_police)" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none w-32"/>
               <button 
+                onClick={() => { setNewEmergency({ name: '', phone: '', icon: 'call', note: '' }); }} 
+                className="text-gray-500 px-3 py-2 text-sm hover:underline"
+              >
+                Limpiar
+              </button>
+              <button 
                 onClick={handleAddEmergency} 
                 className="bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-red-700 flex items-center gap-1"
               >
-                <Plus className="w-4 h-4"/> Añadir
+                <Plus className="w-4 h-4"/> {(newEmergency as any).id ? 'Guardar' : 'Añadir'}
               </button>
             </div>
 
@@ -561,7 +581,10 @@ export default function AdminPage() {
                         <p className="font-mono text-sm text-gray-500">{em.phone}</p>
                       </div>
                     </div>
-                    <button onClick={() => handleDeleteEmergency(em.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 className="w-5 h-5"/></button>
+                    <div className="flex gap-2">
+                       <button onClick={() => setNewEmergency(em)} className="text-blue-500 hover:bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-semibold">Editar</button>
+                       <button onClick={() => handleDeleteEmergency(em.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 className="w-5 h-5"/></button>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Upload, Save, Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 export function PoiFormModal({ categoryId, zone, onClose, onSuccess }: { categoryId?: string, zone?: string, onClose: () => void, onSuccess: () => void }) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', description: '', mapLink: '', price: '' });
+  const editData = typeof window !== 'undefined' ? (window as any).editPoiData : null;
+  const [formData, setFormData] = useState({ 
+    id: editData?.id || '',
+    name: editData?.name || '', 
+    description: editData?.description || '', 
+    mapLink: editData?.mapLink || '', 
+    price: editData?.price || '' 
+  });
   const [file, setFile] = useState<File | null>(null);
+
+  // Clean editData on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        (window as any).editPoiData = null;
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    let thumbUrl = '';
+    let thumbUrl = editData?.thumb || '';
     if (file) {
       const filename = `poi-${Date.now()}-${file.name}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(filename, file);
@@ -21,15 +37,30 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess }: { categor
       }
     }
 
-    const { error } = await supabase.from('guide_pois').insert([{
-      name: formData.name,
-      category_id: categoryId,
-      zone: zone,
-      description: formData.description,
-      mapLink: formData.mapLink,
-      price: formData.price,
-      thumb: thumbUrl,
-    }]);
+    let error = null;
+    if (formData.id) {
+       const { error: updErr } = await supabase.from('guide_pois').update({
+        name: formData.name,
+        category_id: categoryId,
+        zone: zone,
+        description: formData.description,
+        mapLink: formData.mapLink,
+        price: formData.price,
+        thumb: thumbUrl,
+       }).eq('id', formData.id);
+       error = updErr;
+    } else {
+       const { error: insErr } = await supabase.from('guide_pois').insert([{
+        name: formData.name,
+        category_id: categoryId,
+        zone: zone,
+        description: formData.description,
+        mapLink: formData.mapLink,
+        price: formData.price,
+        thumb: thumbUrl,
+       }]);
+       error = insErr;
+    }
 
     setLoading(false);
     if (error) alert("Error: " + error.message);
@@ -42,7 +73,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess }: { categor
       
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden relative z-10 max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Añadir Punto de Interés</h2>
+          <h2 className="text-xl font-bold text-gray-900">{formData.id ? 'Editar Punto de Interés' : 'Añadir Punto de Interés'}</h2>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors">
             <X className="w-5 h-5" />
           </button>
@@ -75,7 +106,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess }: { categor
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Foto Principal (Obligatoria)</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Foto Principal {!formData.id && '(Obligatoria)'}</label>
               <label className="flex flex-col items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-xl appearance-none cursor-pointer hover:border-gray-400 focus:outline-none">
                 <span className="flex items-center space-x-2">
                   <Upload className="w-6 h-6 text-gray-400" />
