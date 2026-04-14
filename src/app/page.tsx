@@ -69,7 +69,8 @@ export default async function Page() {
               <a className="text-neutral-500 hover:text-primary transition-colors" href="#experiencia"><br/></a>
               <a className="text-neutral-500 hover:text-primary transition-colors" href="#faq"><br/><br/></a>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
+              <a href="https://budharoomsapp.web.app/" target="_blank" rel="noreferrer" className="hidden md:flex border border-primary text-primary px-5 py-2.5 md:py-3 text-[10px] md:text-[11px] font-headline font-bold uppercase tracking-[0.2em] hover:bg-primary hover:text-on-primary transition-all backdrop-blur-sm">Guía para Huéspedes</a>
               <a href="https://wa.me/34698947098" target="_blank" rel="noreferrer" className="gold-gradient-bg text-on-primary px-6 md:px-10 py-2.5 md:py-3 text-[10px] md:text-[11px] font-headline font-black uppercase tracking-[0.2em] md:tracking-[0.4em] hover:brightness-110 transition-all shadow-lg leading-none">Reservar</a>
           </div>
       </nav>
