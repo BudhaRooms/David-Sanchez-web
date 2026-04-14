@@ -2,35 +2,63 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 import { AdminLogin } from "@/components/AdminLogin";
 import { LogOut, Plus, Trash2, LayoutGrid, Eye, Images, MapPin } from "lucide-react";
 import { RoomFormModal } from "@/components/RoomFormModal";
+import { PoiFormModal } from "@/components/PoiFormModal";
 
 export default function AdminPage() {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   
+  const [activeTab, setActiveTab] = useState<'rooms' | 'texts' | 'music' | 'guide'>('rooms');
+
+  // Rooms state
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [accommodations, setAccommodations] = useState<any[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [loadingData, setLoadingData] = useState(false);
   const [showModal, setShowModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingRoom, setEditingRoom] = useState<any>(null);
+
+  // Music state
+  const [musicUrl, setMusicUrl] = useState('');
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const [uploadingMusic, setUploadingMusic] = useState(false);
+
+  // Texts state
+  const [heroText1, setHeroText1] = useState('');
+  const [heroText2, setHeroText2] = useState('');
+  const [savingTexts, setSavingTexts] = useState(false);
+
+  // Guide POIs state
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [pois, setPois] = useState<any[]>([]);
+  const [loadingPois, setLoadingPois] = useState(false);
+  const [showPoiModal, setShowPoiModal] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      if (session) fetchAccommodations();
+      if (session) {
+        fetchAccommodations();
+        fetchGlobalSettings();
+        fetchPois();
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) fetchAccommodations();
+      if (session) {
+        fetchAccommodations();
+        fetchGlobalSettings();
+        fetchPois();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -39,13 +67,11 @@ export default function AdminPage() {
 
   async function fetchAccommodations() {
     setLoadingData(true);
-    // Order by size explicitly if we use it for sorting order
     const { data, error } = await supabase
       .from("accommodations")
       .select("*");
 
     if (!error && data) {
-      // Sort in frontend by numeric value of size safely, fallback to created_at
       const sorted = data.sort((a, b) => {
         const orderA = a.size ? parseInt(a.size, 10) : Number.MAX_SAFE_INTEGER;
         const orderB = b.size ? parseInt(b.size, 10) : Number.MAX_SAFE_INTEGER;
@@ -57,6 +83,23 @@ export default function AdminPage() {
     setLoadingData(false);
   };
 
+  async function fetchGlobalSettings() {
+    const { data } = await supabase.from('global_settings').select('*').eq('id', 'default').single();
+    if (data) {
+      setMusicUrl(data.music_url || '');
+      setMusicEnabled(data.music_enabled ?? true);
+      setHeroText1(data.hero_text_1 || '');
+      setHeroText2(data.hero_text_2 || '');
+    }
+  }
+
+  async function fetchPois() {
+    setLoadingPois(true);
+    const { data } = await supabase.from('guide_pois').select('*').order('created_at', { ascending: false });
+    if (data) setPois(data);
+    setLoadingPois(false);
+  }
+
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`¿Estás seguro de que deseas eliminar la propiedad: ${name}?`)) {
       const { error } = await supabase.from("accommodations").delete().eq("id", id);
@@ -65,6 +108,49 @@ export default function AdminPage() {
       } else {
         alert("Error al eliminar: " + error.message);
       }
+    }
+  };
+
+  const handleSaveTexts = async () => {
+    setSavingTexts(true);
+    const { error } = await supabase.from('global_settings')
+      .upsert({ id: 'default', hero_text_1: heroText1, hero_text_2: heroText2 });
+    setSavingTexts(false);
+    if (error) alert("Error guardando textos: " + error.message);
+    else alert("Textos guardados correctamente.");
+  };
+
+  const handleUploadMusic = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingMusic(true);
+    const filename = `music-${Date.now()}.mp3`;
+    const { error } = await supabase.storage.from('media').upload(filename, file);
+    if (error) {
+      alert("Error subiendo música: " + error.message);
+      setUploadingMusic(false);
+      return;
+    }
+    const publicUrl = supabase.storage.from('media').getPublicUrl(filename).data.publicUrl;
+    const { error: dbError } = await supabase.from('global_settings').upsert({ id: 'default', music_url: publicUrl });
+    if (dbError) {
+      alert("Error actualizando url: " + dbError.message);
+    } else {
+      setMusicUrl(publicUrl);
+    }
+    setUploadingMusic(false);
+  };
+
+  const handleToggleMusic = async () => {
+    const newVal = !musicEnabled;
+    const { error } = await supabase.from('global_settings').upsert({ id: 'default', music_enabled: newVal });
+    if (!error) setMusicEnabled(newVal);
+  };
+
+  const handleDeletePoi = async (id: string) => {
+    if (window.confirm("¿Seguro que deseas eliminar este punto de interés?")) {
+      const { error } = await supabase.from('guide_pois').delete().eq('id', id);
+      if (!error) setPois(pois.filter(p => p.id !== id));
     }
   };
 
@@ -87,7 +173,7 @@ export default function AdminPage() {
               <LayoutGrid className="w-4 h-4" />
             </div>
             <div>
-              <h1 className="font-bold tracking-tight text-gray-900 leading-none">Dashboard</h1>
+              <h1 className="font-bold tracking-tight text-gray-900 leading-none">Dashboard Unificado</h1>
               <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider mt-0.5">{session.user.email}</p>
             </div>
           </div>
@@ -105,113 +191,179 @@ export default function AdminPage() {
       {/* DASHBOARD CONTENT */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-24">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Tus Propiedades</h2>
-            <p className="text-gray-500 mt-1">Gestiona el contenido, precios y fotos multimedia de tus catálogos.</p>
-          </div>
-          <button 
-            onClick={() => { setEditingRoom(null); setShowModal(true); }}
-            className="flex items-center justify-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-black hover:shadow-md hover:-translate-y-0.5 transition-all w-full sm:w-auto"
-          >
-            <Plus className="w-5 h-5" /> Nueva Propiedad
-          </button>
+        {/* TABS */}
+        <div className="flex overflow-x-auto border-b border-gray-200 mb-8 gap-6 text-sm font-semibold text-gray-500">
+          <button onClick={() => setActiveTab('rooms')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'rooms' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Habitaciones</button>
+          <button onClick={() => setActiveTab('texts')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'texts' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Textos Web</button>
+          <button onClick={() => setActiveTab('music')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'music' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Música Web</button>
+          <button onClick={() => setActiveTab('guide')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'guide' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Guía Huéspedes</button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loadingData ? (
-            // Skeletons
-            Array(3).fill(0).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 h-72 animate-pulse">
-                <div className="w-full h-40 bg-gray-100 rounded-xl mb-4"></div>
-                <div className="w-3/4 h-5 bg-gray-100 rounded mb-2"></div>
-                <div className="w-1/2 h-4 bg-gray-100 rounded"></div>
+        {activeTab === 'rooms' && (
+          <>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Tus Propiedades</h2>
+                <p className="text-gray-500 mt-1">Gestiona el contenido, precios y fotos multimedia de tus catálogos.</p>
               </div>
-            ))
-          ) : accommodations.length === 0 ? (
-            <div className="col-span-full py-20 bg-white border border-dashed border-gray-300 rounded-3xl flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mb-4">
-                <Images className="w-8 h-8" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Sin Alojamientos Aún</h3>
-              <p className="text-gray-500 max-w-sm mb-6">Tu catálogo web está vacío. Agrega tu primer cuarto o apartamento para verlo en vivo.</p>
-              <button onClick={() => { setEditingRoom(null); setShowModal(true); }} className="bg-white border border-gray-200 text-gray-900 font-semibold px-6 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
-                Crear Propiedad
+              <button 
+                onClick={() => { setEditingRoom(null); setShowModal(true); }}
+                className="flex items-center justify-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-black hover:shadow-md hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+              >
+                <Plus className="w-5 h-5" /> Nueva Propiedad
               </button>
             </div>
-          ) : (
-            accommodations.map((acc) => {
-              // Calcular cuantas fotos tiene la galería
-              // Asumimos que ahora guardamos un array en 'media_gallery' o seguimos simulando main_image_url
-              const gallery = acc.media_gallery || [];
-              const hasOldImage = acc.main_image_url && gallery.length === 0;
-              const photoCount = hasOldImage ? 1 : gallery.length;
-              
-              // Cover
-              const coverImg = gallery.length > 0 ? gallery[0] : acc.main_image_url;
 
-              return (
-                <div key={acc.id} className="bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-lg transition-shadow overflow-hidden group flex flex-col">
-                  {/* Imagen Cover (Thumb) */}
-                  <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
-                    {coverImg ? (
-                      <img src={coverImg} alt={acc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-300"><Images className="w-10 h-10" /></div>
-                    )}
-                    
-                    {/* Badge Zona */}
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-gray-900 text-[11px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wide shadow-sm flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-primary" />
-                      {acc.zone || 'Sin Zona'}
-                    </div>
-
-                    {/* Quick Stat fotos */}
-                    <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-                      <Images className="w-3.5 h-3.5" />
-                      {photoCount}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {loadingData ? (
+                Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 h-72 animate-pulse">
+                    <div className="w-full h-40 bg-gray-100 rounded-xl mb-4"></div>
+                    <div className="w-3/4 h-5 bg-gray-100 rounded mb-2"></div>
+                    <div className="w-1/2 h-4 bg-gray-100 rounded"></div>
                   </div>
-                  
-                  {/* Meta */}
-                  <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1">{acc.name}</h3>
-                    {acc.climate_desc && <span className="text-xs text-primary font-bold mb-1 block uppercase tracking-wide">{acc.climate_desc}</span>}
-                    <p className="text-sm text-gray-500 mb-4 line-clamp-2">{acc.extras_desc || 'Sin descripción'}</p>
-                    
-                    <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <a 
-                        href={`/habitaciones/${acc.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1.5 text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" /> Ver Preview
-                      </a>
-                      
-                      <div className="flex gap-1.5 focus:outline-none">
-                        <button 
-                          onClick={() => { setEditingRoom(acc); setShowModal(true); }}
-                          className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1.5"
-                          title="Editar anuncio"
-                        >
-                          Editar
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(acc.id, acc.name)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar alojamiento"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                ))
+              ) : accommodations.length === 0 ? (
+                <div className="col-span-full py-20 bg-white border border-dashed border-gray-300 rounded-3xl flex flex-col items-center text-center">
+                  <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mb-4">
+                    <Images className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">Sin Alojamientos Aún</h3>
+                  <p className="text-gray-500 max-w-sm mb-6">Tu catálogo web está vacío. Agrega tu primer cuarto o apartamento para verlo en vivo.</p>
+                  <button onClick={() => { setEditingRoom(null); setShowModal(true); }} className="bg-white border border-gray-200 text-gray-900 font-semibold px-6 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+                    Crear Propiedad
+                  </button>
+                </div>
+              ) : (
+                accommodations.map((acc) => {
+                  const gallery = acc.media_gallery || [];
+                  const hasOldImage = acc.main_image_url && gallery.length === 0;
+                  const photoCount = hasOldImage ? 1 : gallery.length;
+                  const coverImg = gallery.length > 0 ? gallery[0] : acc.main_image_url;
+
+                  return (
+                    <div key={acc.id} className="bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-lg transition-shadow overflow-hidden group flex flex-col">
+                      <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+                        {coverImg ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={coverImg} alt={acc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-300"><Images className="w-10 h-10" /></div>
+                        )}
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-gray-900 text-[11px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wide shadow-sm flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-primary" />
+                          {acc.zone || 'Sin Zona'}
+                        </div>
+                        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                          <Images className="w-3.5 h-3.5" />
+                          {photoCount}
+                        </div>
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col">
+                        <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1">{acc.name}</h3>
+                        {acc.climate_desc && <span className="text-xs text-primary font-bold mb-1 block uppercase tracking-wide">{acc.climate_desc}</span>}
+                        <p className="text-sm text-gray-500 mb-4 line-clamp-2">{acc.extras_desc || 'Sin descripción'}</p>
+                        <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                          <a href={`/habitaciones/${acc.slug}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors">
+                            <Eye className="w-4 h-4" /> Ver Preview
+                          </a>
+                          <div className="flex gap-1.5 focus:outline-none">
+                            <button onClick={() => { setEditingRoom(acc); setShowModal(true); }} className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1.5">Editar</button>
+                            <button onClick={() => handleDelete(acc.id, acc.name)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                  );
+                })
+              )}
+            </div>
+          </>
+        )}
+
+        {activeTab === 'texts' && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h2 className="text-xl font-bold mb-6">Textos Dinámicos de la Web</h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Frase Hero Home (1) (Las Mejores...)</label>
+                <textarea className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none" rows={2} value={heroText1} onChange={e => setHeroText1(e.target.value)}></textarea>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Párrafo de Experiencia (En Budha Rooms...)</label>
+                <textarea className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none" rows={4} value={heroText2} onChange={e => setHeroText2(e.target.value)}></textarea>
+              </div>
+              <button disabled={savingTexts} onClick={handleSaveTexts} className="bg-gray-900 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-black transition-colors">
+                {savingTexts ? "Guardando..." : "Guardar Textos"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'music' && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h2 className="text-xl font-bold mb-6">Audio de Fondo de la Web</h2>
+            
+            <div className="mb-6 flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div>
+                <h4 className="font-bold text-gray-900">Música en Vivo</h4>
+                <p className="text-sm text-gray-500">Activa o desactiva la barra de reproducción en la web.</p>
+              </div>
+              <button onClick={handleToggleMusic} className={`w-14 h-8 rounded-full transition-colors flex items-center p-1 ${musicEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
+                <div className={`w-6 h-6 bg-white rounded-full transition-transform ${musicEnabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+               <div>
+                  <h4 className="font-bold text-gray-700 text-sm mb-2">Archivo MP3 Actual</h4>
+                  {musicUrl ? (
+                    <audio controls src={musicUrl} className="w-full max-w-md"></audio>
+                  ) : <p className="text-gray-400 text-sm">No hay música configurada.</p>}
+               </div>
+               
+               <div className="pt-4 border-t border-gray-100">
+                 <h4 className="font-bold text-gray-700 text-sm mb-2">Subir nueva canción</h4>
+                 <input type="file" accept="audio/mpeg, audio/mp3" onChange={handleUploadMusic} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"/>
+                 {uploadingMusic && <p className="text-sm text-blue-600 mt-2">Subiendo...</p>}
+               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'guide' && (
+          <div className="mb-6">
+             <div className="flex justify-between items-end mb-6">
+               <div>
+                <h2 className="text-xl font-bold">Guía de Huéspedes App</h2>
+                <p className="text-sm text-gray-500">Agrega recomendaciones comerciales o de zona.</p>
+               </div>
+               <button onClick={() => setShowPoiModal(true)} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-black transition-all flex items-center gap-2">
+                 <Plus className="w-4 h-4" /> Nuevo POI
+               </button>
+             </div>
+             
+             {loadingPois ? <p>Cargando...</p> : (
+               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                 {pois.map(p => (
+                   <div key={p.id} className="border border-gray-200 rounded-xl p-4 flex flex-col items-start shadow-sm bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
+                      <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{p.category}</span>
+                      <h4 className="font-bold mt-2 text-gray-900 leading-tight">{p.name}</h4>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2 flex-1">{p.description}</p>
+                      
+                      <div className="mt-4 pt-3 border-t border-gray-100 w-full flex justify-between">
+                         <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold hover:underline">Ver Mapa</a>
+                         <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                      </div>
+                   </div>
+                 ))}
+               </div>
+             )}
+          </div>
+        )}
+
       </main>
 
       {showModal && (
@@ -222,6 +374,16 @@ export default function AdminPage() {
             setShowModal(false);
             setEditingRoom(null);
             fetchAccommodations();
+          }} 
+        />
+      )}
+
+      {showPoiModal && (
+        <PoiFormModal 
+          onClose={() => setShowPoiModal(false)} 
+          onSuccess={() => {
+            setShowPoiModal(false);
+            fetchPois();
           }} 
         />
       )}

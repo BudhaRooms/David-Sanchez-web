@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { CheckCircle2, Droplets, Wifi, Bath, Tv, Refrigerator, Sparkles } from 'lucide-react';
 import { getAmenity } from '@/utils/amenitiesData';
+import { AudioPlayer } from '@/components/AudioPlayer';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -16,6 +17,10 @@ export default async function Page() {
   const { data: accommodationsraw } = await supabase
     .from('accommodations')
     .select('*');
+
+  const { data: globalSettings } = await supabase.from('global_settings').select('*').eq('id', 'default').single();
+  const heroText1 = globalSettings?.hero_text_1 || 'Las mejores habitaciones de Alicante';
+  const heroText2 = globalSettings?.hero_text_2 || 'En Budha Rooms, cada detalle ha sido orquestado para ofrecerte una experiencia de lujo.';
 
   const allAccommodations = accommodationsraw?.sort((a, b) => {
     const orderA = a.size ? parseInt(a.size, 10) : Number.MAX_SAFE_INTEGER;
@@ -54,6 +59,7 @@ export default async function Page() {
 
   return (
     <main className="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary overflow-x-hidden">
+      <AudioPlayer url={globalSettings?.music_url} enabled={globalSettings?.music_enabled !== false} />
       {/* ----------------- NAVBAR ----------------- */}
       <nav className="fixed top-0 w-full z-100 bg-black/90 backdrop-blur-xl flex justify-between items-center px-4 md:px-20 py-4 md:py-6 border-b border-primary/20">
           <Link href="/" className="font-headline text-primary-container tracking-widest uppercase">
@@ -100,8 +106,8 @@ export default async function Page() {
               <div className="relative py-6 md:py-8 px-6 md:px-12 overflow-hidden group">
                   <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent"></div>
                   <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent"></div>
-                  <p className="font-serif-headline text-lg md:text-2xl text-primary-container italic tracking-[0.2em] md:tracking-[0.4em] uppercase max-w-4xl leading-normal">
-                      Las mejores habitaciones de Alicante
+                  <p className="font-serif-headline text-lg md:text-2xl text-primary-container italic tracking-[0.2em] md:tracking-[0.4em] uppercase max-w-4xl leading-normal text-balance">
+                      {heroText1}
                   </p>
               </div>
               <div className="mt-12 md:mt-20 flex flex-col md:flex-row gap-4 md:gap-6 justify-center items-center w-full max-w-xs md:max-w-none flex-wrap px-4">
@@ -307,7 +313,7 @@ export default async function Page() {
                     </div>
                     <h2 className="font-headline text-2xl sm:text-4xl lg:text-6xl text-white leading-tight lg:leading-[1.1] uppercase gold-glow text-balance w-full drop-shadow-xl">+15 Años de Experiencia</h2>
                     <p className="text-white font-serif-headline text-lg md:text-2xl leading-relaxed italic border-l-4 md:border-l-8 border-primary pl-6 md:pl-12 drop-shadow-lg font-medium bg-black/20 p-2 rounded-r-lg">
-                        En Budha Rooms, cada detalle ha sido orquestado para ofrecerte una experiencia de lujo.
+                        {heroText2}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 md:gap-16 pt-8 md:pt-16">
                         <div className="flex items-start gap-6 md:gap-10 group bg-black/10 p-4 rounded-xl backdrop-blur-xs">
