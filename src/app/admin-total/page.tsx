@@ -142,13 +142,22 @@ export default function AdminPage() {
   };
 
   const handleSaveTexts = async () => {
-    if (!settingsId) return alert("Error: no settings row found");
     setSavingTexts(true);
-    const { error } = await supabase.from('global_settings')
-      .update({ hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 }).eq('id', settingsId);
+    let currentId = settingsId;
+    if (!currentId) {
+       const { data, error } = await supabase.from('global_settings').insert({ hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 }).select().single();
+       if (!error && data) {
+         setSettingsId(data.id);
+         currentId = data.id;
+       }
+    } else {
+       const { error } = await supabase.from('global_settings')
+         .update({ hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 })
+         .eq('id', currentId);
+       if (error) alert("Error guardando textos: " + error.message);
+    }
     setSavingTexts(false);
-    if (error) alert("Error guardando textos: " + error.message);
-    else alert("Textos guardados correctamente.");
+    alert("Textos guardados correctamente.");
   };
 
   const handleUploadMusic = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,27 +172,53 @@ export default function AdminPage() {
       setUploadingMusic(false);
       return;
     }
-    if (!settingsId) return;
     const publicUrl = supabase.storage.from('media').getPublicUrl(filename).data.publicUrl;
-    const { error: dbError } = await supabase.from('global_settings').update({ music_url: publicUrl }).eq('id', settingsId);
-    if (dbError) {
-      alert("Error actualizando url: " + dbError.message);
+    
+    if (settingsId) {
+      const { error: dbError } = await supabase.from('global_settings').update({ music_url: publicUrl }).eq('id', settingsId);
+      if (dbError) {
+        alert("Error actualizando url: " + dbError.message);
+      } else {
+        setMusicUrl(publicUrl);
+      }
     } else {
-      setMusicUrl(publicUrl);
+      const { data, error: dbError } = await supabase.from('global_settings').insert({ music_url: publicUrl, music_enabled: true, app_music_enabled: true }).select().single();
+      if (dbError) {
+        alert("Error insertando url: " + dbError.message);
+      } else if (data) {
+        setSettingsId(data.id);
+        setMusicUrl(publicUrl);
+        setMusicEnabled(true);
+        setAppMusicEnabled(true);
+      }
     }
     setUploadingMusic(false);
   };
 
   const handleToggleMusic = async () => {
-    if (!settingsId) return;
     const newVal = !musicEnabled;
+    if (!settingsId) {
+       const { data, error } = await supabase.from('global_settings').insert({ music_enabled: newVal, app_music_enabled: true }).select().single();
+       if (!error && data) {
+         setSettingsId(data.id);
+         setMusicEnabled(newVal);
+       }
+       return;
+    }
     const { error } = await supabase.from('global_settings').update({ music_enabled: newVal }).eq('id', settingsId);
     if (!error) setMusicEnabled(newVal);
   };
 
   const handleToggleAppMusic = async () => {
-    if (!settingsId) return;
     const newVal = !appMusicEnabled;
+    if (!settingsId) {
+       const { data, error } = await supabase.from('global_settings').insert({ app_music_enabled: newVal, music_enabled: true }).select().single();
+       if (!error && data) {
+         setSettingsId(data.id);
+         setAppMusicEnabled(newVal);
+       }
+       return;
+    }
     const { error } = await supabase.from('global_settings').update({ app_music_enabled: newVal }).eq('id', settingsId);
     if (!error) setAppMusicEnabled(newVal);
   };
