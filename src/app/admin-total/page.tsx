@@ -185,7 +185,7 @@ export default function AdminPage() {
         setMusicUrl(publicUrl);
       }
     } else {
-      const { data, error: dbError } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_url: publicUrl, music_enabled: true, app_music_enabled: true }).select().single();
+      const { data, error: dbError } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_url: publicUrl, music_enabled: true }).select().single();
       if (dbError) {
         alert("Error insertando url: " + dbError.message);
       } else if (data) {
@@ -201,7 +201,7 @@ export default function AdminPage() {
   const handleToggleMusic = async () => {
     const newVal = !musicEnabled;
     if (!settingsId) {
-       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_enabled: newVal, app_music_enabled: true }).select().single();
+       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_enabled: newVal }).select().single();
        if (!error && data) {
          setSettingsId(data.id);
          setMusicEnabled(newVal);
@@ -214,16 +214,7 @@ export default function AdminPage() {
 
   const handleToggleAppMusic = async () => {
     const newVal = !appMusicEnabled;
-    if (!settingsId) {
-       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), app_music_enabled: newVal, music_enabled: true }).select().single();
-       if (!error && data) {
-         setSettingsId(data.id);
-         setAppMusicEnabled(newVal);
-       }
-       return;
-    }
-    const { error } = await supabase.from('global_settings').update({ app_music_enabled: newVal }).eq('id', settingsId);
-    if (!error) setAppMusicEnabled(newVal);
+    setAppMusicEnabled(newVal);
   };
 
   const handleDeletePoi = async (id: string) => {
