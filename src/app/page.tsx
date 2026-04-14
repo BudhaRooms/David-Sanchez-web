@@ -103,9 +103,10 @@ export default async function Page() {
                       Las mejores habitaciones de Alicante
                   </p>
               </div>
-              <div className="mt-12 md:mt-20 flex flex-col md:flex-row gap-6 md:gap-12 justify-center items-center w-full max-w-xs md:max-w-none">
-                  <a href="#rooms" className="w-full md:w-auto gold-gradient-bg text-on-primary px-8 md:px-16 py-5 md:py-7 font-headline font-black tracking-[0.2em] md:tracking-[0.3em] uppercase text-[11px] md:text-[12px] hover:scale-105 transition-all shadow-2xl text-center leading-none">Explorar habitaciones</a>
-                  <a href="#zonas" className="w-full md:w-auto border border-primary/40 text-primary px-8 md:px-16 py-5 md:py-7 font-headline font-bold tracking-[0.2em] md:tracking-[0.3em] uppercase text-[11px] md:text-[12px] hover:bg-primary/5 transition-all backdrop-blur-sm text-center">Buscar por zona</a>
+              <div className="mt-12 md:mt-20 flex flex-col md:flex-row gap-4 md:gap-6 justify-center items-center w-full max-w-xs md:max-w-none flex-wrap px-4">
+                  <a href="#rooms" className="w-full md:w-auto gold-gradient-bg text-on-primary px-8 md:px-12 py-5 md:py-6 font-headline font-black tracking-[0.2em] md:tracking-[0.3em] uppercase text-[10px] md:text-[11px] hover:scale-105 transition-all shadow-2xl text-center leading-none">Explorar habitaciones</a>
+                  <a href="#zonas" className="w-full md:w-auto border border-primary/40 text-primary px-8 md:px-12 py-5 md:py-6 font-headline font-bold tracking-[0.2em] md:tracking-[0.3em] uppercase text-[10px] md:text-[11px] hover:bg-primary/5 transition-all backdrop-blur-sm text-center">Buscar por zona</a>
+                  <a href="https://budharoomsapp.web.app/" target="_blank" rel="noreferrer" className="w-full md:w-auto border border-primary text-primary px-8 md:px-12 py-5 md:py-6 font-headline font-black tracking-[0.2em] md:tracking-[0.3em] uppercase text-[10px] md:text-[11px] hover:bg-primary hover:text-on-primary hover:scale-105 transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] text-center backdrop-blur-md">Guía para Huéspedes</a>
               </div>
           </div>
       </header>
