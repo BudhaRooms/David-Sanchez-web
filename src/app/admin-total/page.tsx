@@ -13,7 +13,7 @@ export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<'rooms' | 'texts' | 'music' | 'guide'>('rooms');
+  const [activeTab, setActiveTab] = useState<'rooms' | 'texts' | 'music' | 'guide' | 'emergencies'>('rooms');
 
   // Rooms state
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,10 +30,16 @@ export default function AdminPage() {
   const [uploadingMusic, setUploadingMusic] = useState(false);
 
   // Texts state
+  const [heroTitle, setHeroTitle] = useState('');
   const [heroText1, setHeroText1] = useState('');
   const [heroText2, setHeroText2] = useState('');
   const [savingTexts, setSavingTexts] = useState(false);
 
+  // Emergencies State
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [emergencies, setEmergencies] = useState<any[]>([]);
+  const [loadingEms, setLoadingEms] = useState(false);
+  const [newEmergency, setNewEmergency] = useState({ name: '', phone: '', icon: 'phone', note: '' });
   // Guide POIs state
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pois, setPois] = useState<any[]>([]);
@@ -42,7 +48,7 @@ export default function AdminPage() {
   const [loadingPois, setLoadingPois] = useState(false);
   const [showPoiModal, setShowPoiModal] = useState(false);
   
-  const zones = ['Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
+  const zones = ['Recomendaciones Globales', 'Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
   const [activeZone, setActiveZone] = useState<string>(zones[0]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -55,6 +61,7 @@ export default function AdminPage() {
         fetchAccommodations();
         fetchGlobalSettings();
         fetchPois();
+        fetchEmergencies();
       }
     });
 
@@ -66,6 +73,7 @@ export default function AdminPage() {
         fetchAccommodations();
         fetchGlobalSettings();
         fetchPois();
+        fetchEmergencies();
       }
     });
 
@@ -97,6 +105,7 @@ export default function AdminPage() {
       setMusicUrl(data.music_url || '');
       setMusicEnabled(data.music_enabled ?? true);
       setAppMusicEnabled(data.app_music_enabled ?? true);
+      setHeroTitle(data.hero_title || '');
       setHeroText1(data.hero_text_1 || '');
       setHeroText2(data.hero_text_2 || '');
     }
@@ -110,6 +119,13 @@ export default function AdminPage() {
     const { data: ps } = await supabase.from('guide_pois').select('*').order('created_at', { ascending: false });
     if (ps) setPois(ps);
     setLoadingPois(false);
+  }
+
+  async function fetchEmergencies() {
+    setLoadingEms(true);
+    const { data } = await supabase.from('emergency_numbers').select('*').order('created_at', { ascending: true });
+    if (data) setEmergencies(data);
+    setLoadingEms(false);
   }
 
   const handleDelete = async (id: string, name: string) => {
@@ -126,7 +142,7 @@ export default function AdminPage() {
   const handleSaveTexts = async () => {
     setSavingTexts(true);
     const { error } = await supabase.from('global_settings')
-      .upsert({ id: 'default', hero_text_1: heroText1, hero_text_2: heroText2 });
+      .upsert({ id: 'default', hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 });
     setSavingTexts(false);
     if (error) alert("Error guardando textos: " + error.message);
     else alert("Textos guardados correctamente.");
@@ -192,6 +208,22 @@ export default function AdminPage() {
     }
   };
 
+  const handleAddEmergency = async () => {
+    if (!newEmergency.name || !newEmergency.phone) return;
+    const { error } = await supabase.from('emergency_numbers').insert([newEmergency]);
+    if (!error) {
+       setNewEmergency({ name: '', phone: '', icon: 'phone', note: '' });
+       fetchEmergencies();
+    }
+  };
+
+  const handleDeleteEmergency = async (id: string) => {
+    if (window.confirm("¿Eliminar este número de emergencia?")) {
+      const { error } = await supabase.from('emergency_numbers').delete().eq('id', id);
+      if (!error) fetchEmergencies();
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-gray-900 animate-spin"></div></div>;
   }
@@ -235,6 +267,7 @@ export default function AdminPage() {
           <button onClick={() => setActiveTab('texts')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'texts' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Textos Web</button>
           <button onClick={() => setActiveTab('music')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'music' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Música Web</button>
           <button onClick={() => setActiveTab('guide')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'guide' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Guía Huéspedes</button>
+          <button onClick={() => setActiveTab('emergencies')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'emergencies' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Teléfonos Emergencia</button>
         </div>
 
         {activeTab === 'rooms' && (
@@ -323,6 +356,10 @@ export default function AdminPage() {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <h2 className="text-xl font-bold mb-6">Textos Dinámicos de la Web</h2>
             <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Título Principal (H1)</label>
+                <input className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none" value={heroTitle} onChange={e => setHeroTitle(e.target.value)} />
+              </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Frase Hero Home (1) (Las Mejores...)</label>
                 <textarea className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none" rows={2} value={heroText1} onChange={e => setHeroText1(e.target.value)}></textarea>
@@ -461,6 +498,43 @@ export default function AdminPage() {
                  })}
                </div>
              )}
+          </div>
+        )}
+
+        {activeTab === 'emergencies' && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h2 className="text-xl font-bold mb-6">Teléfonos de Emergencia</h2>
+            
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-wrap gap-4 items-center">
+              <input type="text" value={newEmergency.name} onChange={e => setNewEmergency({...newEmergency, name: e.target.value})} placeholder="Nombre (ej. Ambulancia)" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none flex-1"/>
+              <input type="text" value={newEmergency.phone} onChange={e => setNewEmergency({...newEmergency, phone: e.target.value})} placeholder="Teléfono" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none flex-1"/>
+              <input type="text" value={newEmergency.icon} onChange={e => setNewEmergency({...newEmergency, icon: e.target.value})} placeholder="Icono (ej. local_police)" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none w-32"/>
+              <button 
+                onClick={handleAddEmergency} 
+                className="bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-red-700 flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4"/> Añadir
+              </button>
+            </div>
+
+            {loadingEms ? <p className="text-gray-500">Cargando...</p> : (
+              <div className="space-y-3">
+                {emergencies.map(em => (
+                  <div key={em.id} className="flex justify-between items-center bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                    <div className="flex gap-4 items-center">
+                      <div className="w-10 h-10 bg-red-50 text-red-600 rounded-full flex items-center justify-center">
+                        <span className="material-symbols-outlined">{em.icon}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">{em.name}</h4>
+                        <p className="font-mono text-sm text-gray-500">{em.phone}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => handleDeleteEmergency(em.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 className="w-5 h-5"/></button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
