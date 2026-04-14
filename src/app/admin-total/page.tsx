@@ -26,6 +26,7 @@ export default function AdminPage() {
   // Music state
   const [musicUrl, setMusicUrl] = useState('');
   const [musicEnabled, setMusicEnabled] = useState(true);
+  const [appMusicEnabled, setAppMusicEnabled] = useState(true);
   const [uploadingMusic, setUploadingMusic] = useState(false);
 
   // Texts state
@@ -88,6 +89,7 @@ export default function AdminPage() {
     if (data) {
       setMusicUrl(data.music_url || '');
       setMusicEnabled(data.music_enabled ?? true);
+      setAppMusicEnabled(data.app_music_enabled ?? true);
       setHeroText1(data.hero_text_1 || '');
       setHeroText2(data.hero_text_2 || '');
     }
@@ -145,6 +147,12 @@ export default function AdminPage() {
     const newVal = !musicEnabled;
     const { error } = await supabase.from('global_settings').upsert({ id: 'default', music_enabled: newVal });
     if (!error) setMusicEnabled(newVal);
+  };
+
+  const handleToggleAppMusic = async () => {
+    const newVal = !appMusicEnabled;
+    const { error } = await supabase.from('global_settings').upsert({ id: 'default', app_music_enabled: newVal });
+    if (!error) setAppMusicEnabled(newVal);
   };
 
   const handleDeletePoi = async (id: string) => {
@@ -304,14 +312,26 @@ export default function AdminPage() {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <h2 className="text-xl font-bold mb-6">Audio de Fondo de la Web</h2>
             
-            <div className="mb-6 flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <div>
-                <h4 className="font-bold text-gray-900">Música en Vivo</h4>
-                <p className="text-sm text-gray-500">Activa o desactiva la barra de reproducción en la web.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div>
+                  <h4 className="font-bold text-gray-900">Música en Web</h4>
+                  <p className="text-sm text-gray-500">¿Sonará en el inicio de budharooms.com?</p>
+                </div>
+                <button onClick={handleToggleMusic} className={`w-14 h-8 shrink-0 rounded-full transition-colors flex items-center p-1 ${musicEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
+                  <div className={`w-6 h-6 bg-white rounded-full transition-transform ${musicEnabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                </button>
               </div>
-              <button onClick={handleToggleMusic} className={`w-14 h-8 rounded-full transition-colors flex items-center p-1 ${musicEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
-                <div className={`w-6 h-6 bg-white rounded-full transition-transform ${musicEnabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
-              </button>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div>
+                  <h4 className="font-bold text-gray-900">Música en la App</h4>
+                  <p className="text-sm text-gray-500">¿Sonará en la app de la guía del huésped?</p>
+                </div>
+                <button onClick={handleToggleAppMusic} className={`w-14 h-8 shrink-0 rounded-full transition-colors flex items-center p-1 ${appMusicEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
+                  <div className={`w-6 h-6 bg-white rounded-full transition-transform ${appMusicEnabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
