@@ -4,9 +4,14 @@ import { createClient } from '@/utils/supabase/middleware'
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone()
   const hostname = request.headers.get('host') || ''
+  const forwardedHost = request.headers.get('x-forwarded-host') || ''
 
   // Is it Firebase? (The Guia App domain)
-  const isFirebaseApp = hostname.includes('budharoomsapp.web.app') || hostname.includes('budharoomsapp.firebaseapp.com')
+  const isFirebaseApp = hostname.includes('budharoomsapp.web.app') || 
+                        hostname.includes('budharoomsapp.firebaseapp.com') ||
+                        forwardedHost.includes('budharoomsapp.web.app') || 
+                        forwardedHost.includes('budharoomsapp.firebaseapp.com')
+
 
   // LOGICA PARA LA APP DE HUÉSPEDES (Firebase)
   if (isFirebaseApp) {
