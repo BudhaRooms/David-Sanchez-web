@@ -30,6 +30,7 @@ export default function AdminPage() {
   const [uploadingMusic, setUploadingMusic] = useState(false);
 
   // Texts state
+  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [heroTitle, setHeroTitle] = useState('');
   const [heroText1, setHeroText1] = useState('');
   const [heroText2, setHeroText2] = useState('');
@@ -100,8 +101,9 @@ export default function AdminPage() {
   };
 
   async function fetchGlobalSettings() {
-    const { data } = await supabase.from('global_settings').select('*').eq('id', 'default').single();
+    const { data } = await supabase.from('global_settings').select('*').limit(1).maybeSingle();
     if (data) {
+      setSettingsId(data.id);
       setMusicUrl(data.music_url || '');
       setMusicEnabled(data.music_enabled ?? true);
       setAppMusicEnabled(data.app_music_enabled ?? true);
@@ -140,9 +142,10 @@ export default function AdminPage() {
   };
 
   const handleSaveTexts = async () => {
+    if (!settingsId) return alert("Error: no settings row found");
     setSavingTexts(true);
     const { error } = await supabase.from('global_settings')
-      .upsert({ id: 'default', hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 });
+      .update({ hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 }).eq('id', settingsId);
     setSavingTexts(false);
     if (error) alert("Error guardando textos: " + error.message);
     else alert("Textos guardados correctamente.");
@@ -153,14 +156,19 @@ export default function AdminPage() {
     if (!file) return;
     setUploadingMusic(true);
     const filename = `music-${Date.now()}.mp3`;
-    const { error } = await supabase.storage.from('media').upload(filename, file);
+    
+    // Attempt to create bucket if it doesn't exist (ignores error if it does)
+    await supabase.storage.createBucket('music', { public: true });
+    
+    const { error } = await supabase.storage.from('music').upload(filename, file);
     if (error) {
       alert("Error subiendo música: " + error.message);
       setUploadingMusic(false);
       return;
     }
-    const publicUrl = supabase.storage.from('media').getPublicUrl(filename).data.publicUrl;
-    const { error: dbError } = await supabase.from('global_settings').upsert({ id: 'default', music_url: publicUrl });
+    if (!settingsId) return;
+    const publicUrl = supabase.storage.from('music').getPublicUrl(filename).data.publicUrl;
+    const { error: dbError } = await supabase.from('global_settings').update({ music_url: publicUrl }).eq('id', settingsId);
     if (dbError) {
       alert("Error actualizando url: " + dbError.message);
     } else {
@@ -170,14 +178,16 @@ export default function AdminPage() {
   };
 
   const handleToggleMusic = async () => {
+    if (!settingsId) return;
     const newVal = !musicEnabled;
-    const { error } = await supabase.from('global_settings').upsert({ id: 'default', music_enabled: newVal });
+    const { error } = await supabase.from('global_settings').update({ music_enabled: newVal }).eq('id', settingsId);
     if (!error) setMusicEnabled(newVal);
   };
 
   const handleToggleAppMusic = async () => {
+    if (!settingsId) return;
     const newVal = !appMusicEnabled;
-    const { error } = await supabase.from('global_settings').upsert({ id: 'default', app_music_enabled: newVal });
+    const { error } = await supabase.from('global_settings').update({ app_music_enabled: newVal }).eq('id', settingsId);
     if (!error) setAppMusicEnabled(newVal);
   };
 
@@ -316,8 +326,12 @@ export default function AdminPage() {
                     <div key={acc.id} className="bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-lg transition-shadow overflow-hidden group flex flex-col">
                       <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                         {coverImg ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={coverImg} alt={acc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          (typeof coverImg === 'string' && (coverImg.toLowerCase().includes('.mp4') || coverImg.toLowerCase().includes('.mov') || coverImg.toLowerCase().includes('.webm'))) ? (
+                             <video src={coverImg} autoPlay muted loop playsInline className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                          ) : (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={coverImg} alt={acc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          )
                         ) : (
                           <div className="flex items-center justify-center h-full text-gray-300"><Images className="w-10 h-10" /></div>
                         )}
@@ -427,24 +441,41 @@ export default function AdminPage() {
                </div>
              </div>
              
-             {/* Selector de Zona */}
-             <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
-               {zones.map(z => (
+             {/* Selector de Zona & Globales */}
+             <div className="mb-6 border-b border-gray-200 pb-4">
+               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recomendaciones Globales</h3>
+               <div className="flex flex-wrap gap-2 mb-4">
                  <button 
-                   key={z} 
-                   onClick={() => setActiveZone(z)}
-                   className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === z ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                   onClick={() => setActiveZone('Recomendaciones Globales')}
+                   className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === 'Recomendaciones Globales' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                  >
-                   {z}
+                   Recomendaciones Globales
                  </button>
-               ))}
+               </div>
+               
+               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-4">Información por Zona (Locales)</h3>
+               <div className="flex flex-wrap gap-2">
+                 {zones.filter(z => z !== 'Recomendaciones Globales').map(z => (
+                   <button 
+                     key={z} 
+                     onClick={() => setActiveZone(z)}
+                     className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === z ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                   >
+                     {z}
+                   </button>
+                 ))}
+               </div>
              </div>
 
              {/* Gestión de Categorías para la Zona Activa */}
              <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6 flex flex-wrap gap-4 justify-between items-center">
                 <div>
                   <h3 className="font-bold text-gray-800 text-lg">Categorías en {activeZone}</h3>
-                  <p className="text-xs text-gray-500">Ej: Parkings, Gimnasios, Cafeterías...</p>
+                  <p className="text-xs text-gray-500">
+                    {activeZone === 'Recomendaciones Globales' 
+                      ? 'Ej: Restaurantes/Bares, Turismo, Playas/Ocio...'
+                      : 'Ej: Parkings, Farmacias, Supermercados...'}
+                  </p>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                    <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nueva categoría..." className="border border-gray-300 rounded px-3 py-2 text-sm flex-1 outline-none focus:border-gray-900"/>
