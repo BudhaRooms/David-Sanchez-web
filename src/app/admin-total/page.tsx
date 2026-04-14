@@ -145,7 +145,7 @@ export default function AdminPage() {
     setSavingTexts(true);
     let currentId = settingsId;
     if (!currentId) {
-       const { data, error } = await supabase.from('global_settings').insert({ hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 }).select().single();
+       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 }).select().single();
        if (!error && data) {
          setSettingsId(data.id);
          currentId = data.id;
@@ -166,13 +166,16 @@ export default function AdminPage() {
     setUploadingMusic(true);
     const filename = `music/${Date.now()}.mp3`;
     
-    const { error } = await supabase.storage.from('media').upload(filename, file);
+    // Attempt to create the bucket 'music' dynamically if it doesn't exist, ignore error if it does
+    await supabase.storage.createBucket('music', { public: true }).catch(() => {});
+
+    const { error } = await supabase.storage.from('music').upload(filename, file);
     if (error) {
       alert("Error subiendo música: " + error.message);
       setUploadingMusic(false);
       return;
     }
-    const publicUrl = supabase.storage.from('media').getPublicUrl(filename).data.publicUrl;
+    const publicUrl = supabase.storage.from('music').getPublicUrl(filename).data.publicUrl;
     
     if (settingsId) {
       const { error: dbError } = await supabase.from('global_settings').update({ music_url: publicUrl }).eq('id', settingsId);
@@ -182,7 +185,7 @@ export default function AdminPage() {
         setMusicUrl(publicUrl);
       }
     } else {
-      const { data, error: dbError } = await supabase.from('global_settings').insert({ music_url: publicUrl, music_enabled: true, app_music_enabled: true }).select().single();
+      const { data, error: dbError } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_url: publicUrl, music_enabled: true, app_music_enabled: true }).select().single();
       if (dbError) {
         alert("Error insertando url: " + dbError.message);
       } else if (data) {
@@ -198,7 +201,7 @@ export default function AdminPage() {
   const handleToggleMusic = async () => {
     const newVal = !musicEnabled;
     if (!settingsId) {
-       const { data, error } = await supabase.from('global_settings').insert({ music_enabled: newVal, app_music_enabled: true }).select().single();
+       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_enabled: newVal, app_music_enabled: true }).select().single();
        if (!error && data) {
          setSettingsId(data.id);
          setMusicEnabled(newVal);
@@ -212,7 +215,7 @@ export default function AdminPage() {
   const handleToggleAppMusic = async () => {
     const newVal = !appMusicEnabled;
     if (!settingsId) {
-       const { data, error } = await supabase.from('global_settings').insert({ app_music_enabled: newVal, music_enabled: true }).select().single();
+       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), app_music_enabled: newVal, music_enabled: true }).select().single();
        if (!error && data) {
          setSettingsId(data.id);
          setAppMusicEnabled(newVal);
@@ -232,7 +235,7 @@ export default function AdminPage() {
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
-    const { error } = await supabase.from('guide_categories').insert({ zone: activeZone, name: newCategoryName.trim() });
+    const { error } = await supabase.from('guide_categories').insert({ id: crypto.randomUUID(), zone: activeZone, name: newCategoryName.trim() });
     if (!error) {
       setNewCategoryName('');
       fetchPois();
@@ -263,7 +266,7 @@ export default function AdminPage() {
       }
     } else {
       const { ...insertData } = newEmergency;
-      const { error } = await supabase.from('emergency_numbers').insert([insertData]);
+      const { error } = await supabase.from('emergency_numbers').insert([{ ...insertData, id: crypto.randomUUID() }]);
       if (!error) {
          setNewEmergency({ name: '', phone: '', icon: 'call', note: '' });
          fetchEmergencies();
