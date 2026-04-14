@@ -2,10 +2,10 @@ import { useState } from "react";
 import { X, Upload, Save, Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
-export function PoiFormModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
+export function PoiFormModal({ categoryId, zone, onClose, onSuccess }: { categoryId?: string, zone?: string, onClose: () => void, onSuccess: () => void }) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', category: '', description: '', mapLink: '', price: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', mapLink: '', price: '' });
   const [file, setFile] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,7 +23,8 @@ export function PoiFormModal({ onClose, onSuccess }: { onClose: () => void, onSu
 
     const { error } = await supabase.from('guide_pois').insert([{
       name: formData.name,
-      category: formData.category,
+      category_id: categoryId,
+      zone: zone,
       description: formData.description,
       mapLink: formData.mapLink,
       price: formData.price,
@@ -55,18 +56,7 @@ export function PoiFormModal({ onClose, onSuccess }: { onClose: () => void, onSu
               <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} type="text" className="w-full border-gray-300 rounded-lg shadow-sm border p-2 text-sm focus:ring-gray-900 focus:border-gray-900 outline-none" placeholder="Ej. El Portal Taberna" />
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Categoría</label>
-              <select required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full border-gray-300 rounded-lg shadow-sm border p-2 text-sm focus:ring-gray-900 focus:border-gray-900 outline-none">
-                <option value="">Selecciona Categoría...</option>
-                <option value="Restaurantes">Restaurantes</option>
-                <option value="Playas">Playas</option>
-                <option value="Ocio Nocturno">Ocio Nocturno</option>
-                <option value="Monumentos">Monumentos</option>
-                <option value="Zonas Populares">Zonas Populares</option>
-                <option value="Otra">Otra...</option>
-              </select>
-            </div>
+
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Descripción Breve</label>

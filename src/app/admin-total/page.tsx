@@ -37,8 +37,15 @@ export default function AdminPage() {
   // Guide POIs state
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pois, setPois] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [categories, setCategories] = useState<any[]>([]);
   const [loadingPois, setLoadingPois] = useState(false);
   const [showPoiModal, setShowPoiModal] = useState(false);
+  
+  const zones = ['Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
+  const [activeZone, setActiveZone] = useState<string>(zones[0]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -97,8 +104,11 @@ export default function AdminPage() {
 
   async function fetchPois() {
     setLoadingPois(true);
-    const { data } = await supabase.from('guide_pois').select('*').order('created_at', { ascending: false });
-    if (data) setPois(data);
+    const { data: cats } = await supabase.from('guide_categories').select('*').order('created_at', { ascending: true });
+    if (cats) setCategories(cats);
+
+    const { data: ps } = await supabase.from('guide_pois').select('*').order('created_at', { ascending: false });
+    if (ps) setPois(ps);
     setLoadingPois(false);
   }
 
@@ -159,6 +169,26 @@ export default function AdminPage() {
     if (window.confirm("¿Seguro que deseas eliminar este punto de interés?")) {
       const { error } = await supabase.from('guide_pois').delete().eq('id', id);
       if (!error) setPois(pois.filter(p => p.id !== id));
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    const { error } = await supabase.from('guide_categories').insert({ zone: activeZone, name: newCategoryName.trim() });
+    if (!error) {
+      setNewCategoryName('');
+      fetchPois();
+    } else {
+      alert("Error al crear la categoría: " + error.message);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (window.confirm("¿Seguro que deseas eliminar esta categoría y TODOS sus lugares?")) {
+      const { error } = await supabase.from('guide_categories').delete().eq('id', id);
+      if (!error) {
+        fetchPois();
+      }
     }
   };
 
@@ -356,29 +386,79 @@ export default function AdminPage() {
              <div className="flex justify-between items-end mb-6">
                <div>
                 <h2 className="text-xl font-bold">Guía de Huéspedes App</h2>
-                <p className="text-sm text-gray-500">Agrega recomendaciones comerciales o de zona.</p>
+                <p className="text-sm text-gray-500">Agrega categorías dinámicas y comerciales por cada Zona.</p>
                </div>
-               <button onClick={() => setShowPoiModal(true)} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-black transition-all flex items-center gap-2">
-                 <Plus className="w-4 h-4" /> Nuevo POI
-               </button>
              </div>
              
-             {loadingPois ? <p>Cargando...</p> : (
-               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                 {pois.map(p => (
-                   <div key={p.id} className="border border-gray-200 rounded-xl p-4 flex flex-col items-start shadow-sm bg-white">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
-                      <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{p.category}</span>
-                      <h4 className="font-bold mt-2 text-gray-900 leading-tight">{p.name}</h4>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2 flex-1">{p.description}</p>
-                      
-                      <div className="mt-4 pt-3 border-t border-gray-100 w-full flex justify-between">
-                         <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold hover:underline">Ver Mapa</a>
-                         <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
-                      </div>
-                   </div>
-                 ))}
+             {/* Selector de Zona */}
+             <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
+               {zones.map(z => (
+                 <button 
+                   key={z} 
+                   onClick={() => setActiveZone(z)}
+                   className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === z ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                 >
+                   {z}
+                 </button>
+               ))}
+             </div>
+
+             {/* Gestión de Categorías para la Zona Activa */}
+             <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6 flex flex-wrap gap-4 justify-between items-center">
+                <div>
+                  <h3 className="font-bold text-gray-800 text-lg">Categorías en {activeZone}</h3>
+                  <p className="text-xs text-gray-500">Ej: Parkings, Gimnasios, Cafeterías...</p>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto">
+                   <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nueva categoría..." className="border border-gray-300 rounded px-3 py-2 text-sm flex-1 outline-none focus:border-gray-900"/>
+                   <button onClick={handleAddCategory} className="bg-gray-900 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-black whitespace-nowrap">Crear Categoría</button>
+                </div>
+             </div>
+
+             {loadingPois ? <p className="text-gray-500 p-4">Cargando datos principales...</p> : categories.filter(c => c.zone === activeZone).length === 0 ? <p className="text-gray-500 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl">No hay categorías en esta zona. ¡Crea la primera arriba!</p> : (
+               <div className="space-y-8">
+                 {categories.filter(c => c.zone === activeZone).map(cat => {
+                   const catPois = pois.filter(p => p.category_id === cat.id);
+                   return (
+                     <div key={cat.id} className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
+                       <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
+                          <h3 className="text-xl font-bold text-gray-900 uppercase tracking-wide">{cat.name}</h3>
+                          <div className="flex gap-3">
+                             <button onClick={() => {
+                               setSelectedCategoryId(cat.id);
+                               setShowPoiModal(true);
+                             }} className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 flex items-center gap-1">
+                               <Plus className="w-4 h-4"/> Añadir Lugar
+                             </button>
+                             <button onClick={() => handleDeleteCategory(cat.id)} className="text-sm text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                               <Trash2 className="w-4 h-4"/> 
+                             </button>
+                          </div>
+                       </div>
+
+                       {catPois.length === 0 ? (
+                         <p className="text-sm text-gray-400 italic py-2">No hay lugares en esta categoría todavía.</p>
+                       ) : (
+                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                           {catPois.map(p => (
+                             <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col items-start shadow-sm bg-gray-50 hover:bg-white hover:border-gray-300 transition-colors">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
+                                <h4 className="font-bold mt-2 text-gray-900 leading-tight">{p.name}</h4>
+                                {p.price && <span className="mt-1 text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded-full">{p.price}</span>}
+                                <p className="text-xs text-gray-500 mt-2 line-clamp-2 flex-1">{p.description}</p>
+                                
+                                <div className="mt-4 pt-3 border-t border-gray-200 w-full flex justify-between">
+                                   <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline"><MapPin className="w-3 h-3"/> Mapa</a>
+                                   <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold hover:underline">Eliminar</button>
+                                </div>
+                             </div>
+                           ))}
+                         </div>
+                       )}
+                     </div>
+                   );
+                 })}
                </div>
              )}
           </div>
@@ -398,11 +478,17 @@ export default function AdminPage() {
         />
       )}
 
-      {showPoiModal && (
+      {showPoiModal && selectedCategoryId && (
         <PoiFormModal 
-          onClose={() => setShowPoiModal(false)} 
+          categoryId={selectedCategoryId}
+          zone={activeZone}
+          onClose={() => {
+            setShowPoiModal(false);
+            setSelectedCategoryId(null);
+          }} 
           onSuccess={() => {
             setShowPoiModal(false);
+            setSelectedCategoryId(null);
             fetchPois();
           }} 
         />
