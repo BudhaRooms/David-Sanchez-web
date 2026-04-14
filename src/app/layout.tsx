@@ -41,6 +41,7 @@ export default function RootLayout({
     <html
       lang="es"
       className="dark antialiased scroll-smooth"
+      suppressHydrationWarning
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -50,7 +51,7 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body min-h-screen bg-background text-on-background flex flex-col m-0 p-0 overflow-x-hidden relative">
+      <body className="font-body min-h-screen bg-background text-on-background flex flex-col m-0 p-0 overflow-x-hidden relative" suppressHydrationWarning>
         {children}
         <SocialMediaFloater />
         <CookieBanner />
