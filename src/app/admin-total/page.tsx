@@ -52,9 +52,14 @@ export default function AdminPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingPoi, setEditingPoi] = useState<any>(null);
 
-  const zones = ['Recomendaciones Globales', 'Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
-  const [activeZone, setActiveZone] = useState<string>(zones[0]);
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const GLOBAL_CATEGORIES = ['Restaurantes', 'Playas', 'Centros Comerciales', 'Ocio Nocturno', 'Zonas Concurridas', 'Monumentos', 'Culturales'];
+  const ZONE_NAMES = ['Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
+  const GLOBAL_ZONE = 'Recomendaciones Globales';
+  const CAT_ICONS: Record<string, string> = { 'Restaurantes': '🍽️', 'Playas': '🏖️', 'Centros Comerciales': '🛍️', 'Ocio Nocturno': '🎶', 'Zonas Concurridas': '🚶', 'Monumentos': '🏛️', 'Culturales': '🎭' };
+
+  const [activeGuideSection, setActiveGuideSection] = useState<'global' | 'zone'>('global');
+  const [activeGlobalCatName, setActiveGlobalCatName] = useState<string>(GLOBAL_CATEGORIES[0]);
+  const [activeZone, setActiveZone] = useState<string>('Mercado Central');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -131,7 +136,8 @@ export default function AdminPage() {
       .order('created_at', { ascending: true });
 
     if (catErr) console.error("Error fetching categories:", catErr.message);
-    if (cats) setCategories(cats);
+    const allCats = cats || [];
+    setCategories(allCats);
 
     const { data: ps, error: poiErr } = await supabase
       .from('guide_pois')
@@ -141,6 +147,33 @@ export default function AdminPage() {
     if (poiErr) console.error("Error fetching POIs:", poiErr.message);
     if (ps) setPois(ps);
     setLoadingPois(false);
+
+    // Auto-ensure all predefined categories exist
+    await ensureGlobalCategories(allCats);
+  }
+
+  async function ensureGlobalCategories(existingCats: Record<string, string>[]) {
+    const GLOBAL_CATS_LOCAL = ['Restaurantes', 'Playas', 'Centros Comerciales', 'Ocio Nocturno', 'Zonas Concurridas', 'Monumentos', 'Culturales'];
+    const ZONE_NAMES_LOCAL = ['Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
+    const GLOBAL_ZONE_LOCAL = 'Recomendaciones Globales';
+
+    const toCreate: { id: string; name: string; zone: string }[] = [];
+
+    // Ensure 7 global categories
+    for (const name of GLOBAL_CATS_LOCAL) {
+      const exists = existingCats.find(c => c.name === name && c.zone === GLOBAL_ZONE_LOCAL);
+      if (!exists) toCreate.push({ id: crypto.randomUUID(), name, zone: GLOBAL_ZONE_LOCAL });
+    }
+    // Ensure 1 default category per zone
+    for (const zone of ZONE_NAMES_LOCAL) {
+      const exists = existingCats.find(c => c.zone === zone);
+      if (!exists) toCreate.push({ id: crypto.randomUUID(), name: 'Lugares', zone });
+    }
+
+    if (toCreate.length > 0) {
+      const { error } = await supabase.from('guide_categories').insert(toCreate);
+      if (!error) fetchPois(); // refresh after creation
+    }
   }
 
   async function fetchEmergencies() {
@@ -273,16 +306,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    const { error } = await supabase.from('guide_categories').insert({ id: crypto.randomUUID(), zone: activeZone, name: newCategoryName.trim() });
-    if (!error) {
-      setNewCategoryName('');
-      fetchPois();
-    } else {
-      alert("Error al crear la categoría: " + error.message);
-    }
-  };
+
 
   const handleDeleteCategory = async (id: string) => {
     if (window.confirm("¿Seguro que deseas eliminar esta categoría y TODOS sus lugares?")) {
@@ -375,8 +399,8 @@ export default function AdminPage() {
           <button onClick={() => setActiveTab('rooms')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'rooms' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🏠 Habitaciones</button>
           <button onClick={() => setActiveTab('texts')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'texts' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>📝 Textos Web</button>
           <button onClick={() => setActiveTab('music')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'music' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🎵 Música</button>
-          <button onClick={() => setActiveTab('guide')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'guide' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🗺️ Guía Huéspedes</button>
-          <button onClick={() => setActiveTab('emergencies')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'emergencies' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🚨 Emergencias</button>
+          <button onClick={() => { setActiveTab('guide'); fetchPois(); }} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'guide' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🗺️ Guía Huéspedes</button>
+          <button onClick={() => { setActiveTab('emergencies'); fetchEmergencies(); }} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'emergencies' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🚨 Emergencias</button>
         </div>
 
         {/* =================== ROOMS TAB =================== */}
@@ -557,150 +581,194 @@ export default function AdminPage() {
 
         {/* =================== GUIDE TAB =================== */}
         {activeTab === 'guide' && (
-          <div className="mb-6">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <h2 className="text-xl font-bold">Guía de Huéspedes App</h2>
-                <p className="text-sm text-gray-500">Agrega categorías dinámicas y comerciales por cada Zona.</p>
-              </div>
+          <div className="mb-6 space-y-8">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Guía de Huéspedes App</h2>
+              <p className="text-gray-500 mt-1">Gestiona los lugares publicados en la App. Los cambios se sincronizan en tiempo real.</p>
             </div>
 
-            {/* Selector de Zona */}
-            <div className="mb-6 border-b border-gray-200 pb-4">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recomendaciones Globales</h3>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                  onClick={() => setActiveZone('Recomendaciones Globales')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === 'Recomendaciones Globales' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                  🌍 Recomendaciones Globales
-                </button>
+            {/* ── SECTION 1: RECOMENDACIONES GLOBALES ── */}
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+                <h3 className="font-bold text-gray-900 text-lg">🌍 Recomendaciones Globales</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Visibles para todos los huéspedes en la app. Selecciona una categoría para gestionarla.</p>
               </div>
-
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-4">Información por Zona (Locales)</h3>
-              <div className="flex flex-wrap gap-2">
-                {zones.filter(z => z !== 'Recomendaciones Globales').map(z => (
-                  <button
-                    key={z}
-                    onClick={() => setActiveZone(z)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === z ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                  >
-                    📍 {z}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Add Category */}
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6 flex flex-wrap gap-4 justify-between items-center">
-              <div>
-                <h3 className="font-bold text-gray-800 text-lg">Categorías en {activeZone}</h3>
-                <p className="text-xs text-gray-500">
-                  {activeZone === 'Recomendaciones Globales'
-                    ? 'Ej: Restaurantes/Bares, Turismo, Playas/Ocio...'
-                    : 'Ej: Parkings, Farmacias, Supermercados...'}
-                </p>
-              </div>
-              <div className="flex gap-2 w-full md:w-auto">
-                <input
-                  type="text"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-                  placeholder="Nueva categoría..."
-                  className="border border-gray-300 rounded px-3 py-2 text-sm flex-1 outline-none focus:border-gray-900"
-                />
-                <button onClick={handleAddCategory} className="bg-gray-900 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-black whitespace-nowrap">
-                  <Plus className="w-4 h-4 inline mr-1" />Crear Categoría
-                </button>
-              </div>
-            </div>
-
-            {/* Categories & POIs */}
-            {loadingPois ? (
-              <p className="text-gray-500 p-4">Cargando datos...</p>
-            ) : categories.filter(c =>
-                activeZone === 'Recomendaciones Globales'
-                  ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone))
-                  : c.zone === activeZone
-              ).length === 0 ? (
-              <p className="text-gray-500 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl">
-                No hay categorías en esta zona. ¡Crea la primera arriba!
-              </p>
-            ) : (
-              <div className="space-y-8">
-                {categories
-                  .filter(c =>
-                    activeZone === 'Recomendaciones Globales'
-                      ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone))
-                      : c.zone === activeZone
-                  )
-                  .map(cat => {
-                    const catPois = pois.filter(p => p.category_id === cat.id);
+              <div className="p-6">
+                {/* 7 Category Tabs */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {GLOBAL_CATEGORIES.map(catName => {
+                    const catPoisCount = pois.filter(p => {
+                      const cat = categories.find(c => c.name === catName && c.zone === GLOBAL_ZONE);
+                      return cat && p.category_id === cat.id;
+                    }).length;
                     return (
-                      <div key={cat.id} className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
-                        <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
-                          <h3 className="text-xl font-bold text-gray-900 uppercase tracking-wide">{cat.name}</h3>
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => {
-                                setSelectedCategoryId(cat.id);
-                                setEditingPoi(null);
-                                setShowPoiModal(true);
-                              }}
-                              className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 flex items-center gap-1"
-                            >
-                              <Plus className="w-4 h-4"/> Añadir Lugar
-                            </button>
-                            <button onClick={() => handleDeleteCategory(cat.id)} className="text-sm text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
-                              <Trash2 className="w-4 h-4"/>
-                            </button>
-                          </div>
-                        </div>
+                      <button
+                        key={catName}
+                        onClick={() => { setActiveGuideSection('global'); setActiveGlobalCatName(catName); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                          activeGuideSection === 'global' && activeGlobalCatName === catName
+                            ? 'bg-gray-900 text-white shadow-sm'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        <span>{CAT_ICONS[catName]}</span>
+                        {catName}
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeGuideSection === 'global' && activeGlobalCatName === catName ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-600'}`}>
+                          {catPoisCount}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                        {catPois.length === 0 ? (
-                          <p className="text-sm text-gray-400 italic py-2">No hay lugares en esta categoría todavía.</p>
-                        ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            {catPois.map(p => (
-                              <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col items-start shadow-sm bg-gray-50 hover:bg-white hover:border-gray-300 transition-colors">
+                {/* Selected Global Category POIs */}
+                {activeGuideSection === 'global' && (() => {
+                  const cat = categories.find(c => c.name === activeGlobalCatName && c.zone === GLOBAL_ZONE);
+                  const catPois = cat ? pois.filter(p => p.category_id === cat.id) : [];
+                  return (
+                    <div>
+                      <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-base flex items-center gap-2">
+                            <span className="text-xl">{CAT_ICONS[activeGlobalCatName]}</span>
+                            {activeGlobalCatName}
+                          </h4>
+                          <p className="text-xs text-gray-400 mt-0.5">{catPois.length} lugares publicados</p>
+                        </div>
+                        {cat && (
+                          <button
+                            onClick={() => { setSelectedCategoryId(cat.id); setEditingPoi(null); setShowPoiModal(true); }}
+                            className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-black transition-colors"
+                          >
+                            <Plus className="w-4 h-4" /> Añadir Lugar
+                          </button>
+                        )}
+                      </div>
+                      {loadingPois ? (
+                        <p className="text-gray-400 text-sm py-4">Cargando...</p>
+                      ) : catPois.length === 0 ? (
+                        <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+                          <p className="text-gray-400 text-sm">No hay lugares en {activeGlobalCatName} todavía.</p>
+                          {cat && <button onClick={() => { setSelectedCategoryId(cat.id); setEditingPoi(null); setShowPoiModal(true); }} className="mt-3 text-sm underline text-gray-500 hover:text-gray-700">+ Añadir el primero</button>}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {catPois.map(p => (
+                            <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col bg-gray-50 hover:bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
+                              <h4 className="font-bold text-gray-900 leading-tight">{p.name}</h4>
+                              {p.price && <span className="mt-1 text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded-full w-fit">{p.price}</span>}
+                              <p className="text-xs text-gray-500 mt-2 line-clamp-2 flex-1">{p.description}</p>
+                              <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                                {p.mapLink ? (
+                                  <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">
+                                    <MapPin className="w-3 h-3" />Mapa
+                                  </a>
+                                ) : <span />}
+                                <div className="flex gap-1.5">
+                                  <button onClick={() => { setEditingPoi(p); setSelectedCategoryId(cat!.id); setShowPoiModal(true); }} className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded-lg hover:bg-blue-100">✏️ Editar</button>
+                                  <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold px-2 py-1 rounded-lg hover:bg-red-50">🗑️</button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* ── SECTION 2: ZONES ── */}
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+                <h3 className="font-bold text-gray-900 text-lg">📍 Información por Zona</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Lugares específicos por zona de Alicante. Selecciona una zona para gestionar sus lugares.</p>
+              </div>
+              <div className="p-6">
+                {/* 5 Zone Tabs */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {ZONE_NAMES.map(zone => {
+                    const zoneCats = categories.filter(c => c.zone === zone);
+                    const zoneCount = pois.filter(p => zoneCats.some(c => c.id === p.category_id)).length;
+                    return (
+                      <button
+                        key={zone}
+                        onClick={() => { setActiveGuideSection('zone'); setActiveZone(zone); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                          activeGuideSection === 'zone' && activeZone === zone
+                            ? 'bg-gray-900 text-white shadow-sm'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        📍 {zone}
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeGuideSection === 'zone' && activeZone === zone ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-600'}`}>
+                          {zoneCount}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Zone POIs */}
+                {activeGuideSection === 'zone' && (() => {
+                  const zoneCats = categories.filter(c => c.zone === activeZone);
+                  const zonePois = pois.filter(p => zoneCats.some(c => c.id === p.category_id));
+                  const defaultCatId = zoneCats[0]?.id ?? null;
+                  return (
+                    <div>
+                      <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-base">📍 {activeZone}</h4>
+                          <p className="text-xs text-gray-400 mt-0.5">{zonePois.length} lugares publicados</p>
+                        </div>
+                        <button
+                          onClick={() => { if (defaultCatId) { setSelectedCategoryId(defaultCatId); setEditingPoi(null); setShowPoiModal(true); } }}
+                          className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-black transition-colors"
+                        >
+                          <Plus className="w-4 h-4" /> Añadir Lugar
+                        </button>
+                      </div>
+                      {loadingPois ? (
+                        <p className="text-gray-400 text-sm py-4">Cargando...</p>
+                      ) : zonePois.length === 0 ? (
+                        <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+                          <p className="text-gray-400 text-sm">No hay lugares registrados en {activeZone} todavía.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {zonePois.map(p => {
+                            const pCat = zoneCats.find(c => c.id === p.category_id);
+                            return (
+                              <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col bg-gray-50 hover:bg-white hover:border-gray-300 hover:shadow-sm transition-all">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
-                                <h4 className="font-bold mt-2 text-gray-900 leading-tight">{p.name}</h4>
-                                {p.price && <span className="mt-1 text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded-full">{p.price}</span>}
+                                <h4 className="font-bold text-gray-900 leading-tight">{p.name}</h4>
+                                {p.price && <span className="mt-1 text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded-full w-fit">{p.price}</span>}
                                 <p className="text-xs text-gray-500 mt-2 line-clamp-2 flex-1">{p.description}</p>
-
-                                <div className="mt-4 pt-3 border-t border-gray-200 w-full flex justify-between items-center">
+                                <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
                                   {p.mapLink ? (
                                     <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">
-                                      <MapPin className="w-3 h-3"/>Mapa
+                                      <MapPin className="w-3 h-3" />Mapa
                                     </a>
                                   ) : <span />}
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => {
-                                        setEditingPoi(p);
-                                        setSelectedCategoryId(cat.id);
-                                        setShowPoiModal(true);
-                                      }}
-                                      className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded hover:bg-blue-100"
-                                    >
-                                      ✏️ Editar
-                                    </button>
-                                    <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold px-2 py-1 rounded hover:bg-red-50">
-                                      🗑️ Eliminar
-                                    </button>
+                                  <div className="flex gap-1.5">
+                                    <button onClick={() => { setEditingPoi(p); setSelectedCategoryId(pCat?.id ?? defaultCatId); setShowPoiModal(true); }} className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded-lg hover:bg-blue-100">✏️ Editar</button>
+                                    <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold px-2 py-1 rounded-lg hover:bg-red-50">🗑️</button>
                                   </div>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
-            )}
+            </div>
           </div>
         )}
 
