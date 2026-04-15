@@ -658,13 +658,13 @@ export default function AdminPage() {
                           {catPois.map(p => (
                             <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col bg-gray-50 hover:bg-white hover:border-gray-300 hover:shadow-sm transition-all">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
+                              {p.image_url && <img src={p.image_url} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
                               <h4 className="font-bold text-gray-900 leading-tight">{p.name}</h4>
                               {p.price && <span className="mt-1 text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded-full w-fit">{p.price}</span>}
                               <p className="text-xs text-gray-500 mt-2 line-clamp-2 flex-1">{p.description}</p>
                               <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
-                                {p.map_link ? (
-                                  <a href={p.map_link} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">
+                                {p.maps_link ? (
+                                  <a href={p.maps_link} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">
                                     <MapPin className="w-3 h-3" />Mapa
                                   </a>
                                 ) : <span />}
@@ -744,13 +744,13 @@ export default function AdminPage() {
                             return (
                               <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col bg-gray-50 hover:bg-white hover:border-gray-300 hover:shadow-sm transition-all">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
+                                {p.image_url && <img src={p.image_url} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
                                 <h4 className="font-bold text-gray-900 leading-tight">{p.name}</h4>
                                 {p.price && <span className="mt-1 text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded-full w-fit">{p.price}</span>}
                                 <p className="text-xs text-gray-500 mt-2 line-clamp-2 flex-1">{p.description}</p>
                                 <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
-                                  {p.map_link ? (
-                                    <a href={p.map_link} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">
+                                  {p.maps_link ? (
+                                    <a href={p.maps_link} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">
                                       <MapPin className="w-3 h-3" />Mapa
                                     </a>
                                   ) : <span />}

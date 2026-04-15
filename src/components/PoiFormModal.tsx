@@ -19,10 +19,10 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
     id: initialData?.id || '',
     name: initialData?.name || '',
     description: initialData?.description || '',
-    map_link: initialData?.map_link || '',
+    maps_link: initialData?.maps_link || '',
     price: initialData?.price || ''
   });
-  const [existingThumb] = useState<string>(initialData?.thumb || '');
+  const [existingImageUrl] = useState<string>(initialData?.image_url || '');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const prevPreviewRef = useRef<string>('');
@@ -46,7 +46,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
     e.preventDefault();
     setLoading(true);
 
-    let thumbUrl = existingThumb;
+    let thumbUrl = existingImageUrl;
     if (file) {
       // Ensure 'media' bucket exists (ignore error if already present)
       await supabase.storage.createBucket('media', { public: true }).catch(() => {});
@@ -64,9 +64,9 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
         category_id: categoryId,
         zone: zone,
         description: formData.description,
-        map_link: formData.map_link,
+        maps_link: formData.maps_link,
         price: formData.price,
-        thumb: thumbUrl,
+        image_url: thumbUrl,
       }).eq('id', formData.id);
       error = updErr;
     } else {
@@ -75,9 +75,9 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
         category_id: categoryId,
         zone: zone,
         description: formData.description,
-        map_link: formData.map_link,
+        maps_link: formData.maps_link,
         price: formData.price,
-        thumb: thumbUrl,
+        image_url: thumbUrl,
       }]);
       error = insErr;
     }
@@ -119,17 +119,17 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Link Google Maps</label>
-                <input value={formData.map_link} onChange={e => setFormData({...formData, map_link: e.target.value})} type="url" className="w-full border-gray-300 rounded-lg shadow-sm border p-2 text-sm focus:ring-gray-900 outline-none" placeholder="https://maps.google.com/..." />
+                <input value={formData.maps_link} onChange={e => setFormData({...formData, maps_link: e.target.value})} type="url" className="w-full border-gray-300 rounded-lg shadow-sm border p-2 text-sm focus:ring-gray-900 outline-none" placeholder="https://maps.google.com/..." />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Foto Principal</label>
               {/* Preview */}
-              {(previewUrl || existingThumb) && (
+              {(previewUrl || existingImageUrl) && (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
-                  src={previewUrl || existingThumb}
+                  src={previewUrl || existingImageUrl}
                   alt="preview"
                   className="w-full h-32 object-cover rounded-lg mb-2"
                 />
@@ -137,7 +137,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
               <label className="flex flex-col items-center justify-center w-full h-24 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-xl appearance-none cursor-pointer hover:border-gray-400 focus:outline-none">
                 <span className="flex items-center space-x-2">
                   <Upload className="w-5 h-5 text-gray-400" />
-                  <span className="font-medium text-sm text-gray-500">{file ? file.name : (existingThumb ? "Cambiar foto" : "Haga clic para seleccionar")}</span>
+                  <span className="font-medium text-sm text-gray-500">{file ? file.name : (existingImageUrl ? "Cambiar foto" : "Haga clic para seleccionar")}</span>
                 </span>
                 <input type="file" name="file_upload" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e.target.files?.[0] || null)} />
               </label>
