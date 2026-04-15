@@ -12,7 +12,7 @@ export default function AdminPage() {
   const supabase = createClient();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const [activeTab, setActiveTab] = useState<'rooms' | 'texts' | 'music' | 'guide' | 'emergencies'>('rooms');
 
   // Rooms state
@@ -41,6 +41,7 @@ export default function AdminPage() {
   const [emergencies, setEmergencies] = useState<any[]>([]);
   const [loadingEms, setLoadingEms] = useState(false);
   const [newEmergency, setNewEmergency] = useState({ name: '', phone: '', icon: 'phone', note: '' });
+
   // Guide POIs state
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pois, setPois] = useState<any[]>([]);
@@ -48,7 +49,9 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingPois, setLoadingPois] = useState(false);
   const [showPoiModal, setShowPoiModal] = useState(false);
-  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editingPoi, setEditingPoi] = useState<any>(null);
+
   const zones = ['Recomendaciones Globales', 'Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
   const [activeZone, setActiveZone] = useState<string>(zones[0]);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -96,12 +99,18 @@ export default function AdminPage() {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       setAccommodations(sorted);
+    } else if (error) {
+      console.error("Error fetching accommodations:", error.message);
     }
     setLoadingData(false);
-  };
+  }
 
   async function fetchGlobalSettings() {
-    const { data } = await supabase.from('global_settings').select('*').limit(1).maybeSingle();
+    const { data, error } = await supabase.from('global_settings').select('*').limit(1).maybeSingle();
+    if (error) {
+      console.error("Error fetching settings:", error.message);
+      return;
+    }
     if (data) {
       setSettingsId(data.id);
       setMusicUrl(data.music_url || '');
@@ -115,17 +124,31 @@ export default function AdminPage() {
 
   async function fetchPois() {
     setLoadingPois(true);
-    const { data: cats } = await supabase.from('guide_categories').select('*').order('created_at', { ascending: true });
+    const { data: cats, error: catErr } = await supabase
+      .from('guide_categories')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (catErr) console.error("Error fetching categories:", catErr.message);
     if (cats) setCategories(cats);
 
-    const { data: ps } = await supabase.from('guide_pois').select('*').order('created_at', { ascending: false });
+    const { data: ps, error: poiErr } = await supabase
+      .from('guide_pois')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (poiErr) console.error("Error fetching POIs:", poiErr.message);
     if (ps) setPois(ps);
     setLoadingPois(false);
   }
 
   async function fetchEmergencies() {
     setLoadingEms(true);
-    const { data } = await supabase.from('emergency_numbers').select('*').order('created_at', { ascending: true });
+    const { data, error } = await supabase
+      .from('emergency_numbers')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (error) console.error("Error fetching emergencies:", error.message);
     if (data) setEmergencies(data);
     setLoadingEms(false);
   }
@@ -164,19 +187,22 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingMusic(true);
-    const filename = `music/${Date.now()}.mp3`;
-    
-    // Attempt to create the bucket 'music' dynamically if it doesn't exist, ignore error if it does
-    await supabase.storage.createBucket('music', { public: true }).catch(() => {});
 
-    const { error } = await supabase.storage.from('music').upload(filename, file);
-    if (error) {
-      alert("Error subiendo música: " + error.message);
+    const filename = `track-${Date.now()}.mp3`;
+
+    // Bucket 'music' already exists and is public — just upload
+    const { error: uploadError } = await supabase.storage.from('music').upload(filename, file, {
+      upsert: true,
+    });
+
+    if (uploadError) {
+      alert("Error subiendo música: " + uploadError.message);
       setUploadingMusic(false);
       return;
     }
+
     const publicUrl = supabase.storage.from('music').getPublicUrl(filename).data.publicUrl;
-    
+
     if (settingsId) {
       const { error: dbError } = await supabase.from('global_settings').update({ music_url: publicUrl }).eq('id', settingsId);
       if (dbError) {
@@ -185,7 +211,12 @@ export default function AdminPage() {
         setMusicUrl(publicUrl);
       }
     } else {
-      const { data, error: dbError } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_url: publicUrl, music_enabled: true }).select().single();
+      const newId = crypto.randomUUID();
+      const { data, error: dbError } = await supabase
+        .from('global_settings')
+        .insert({ id: newId, music_url: publicUrl, music_enabled: true, app_music_enabled: true })
+        .select()
+        .single();
       if (dbError) {
         alert("Error insertando url: " + dbError.message);
       } else if (data) {
@@ -196,12 +227,14 @@ export default function AdminPage() {
       }
     }
     setUploadingMusic(false);
+    alert("🎵 Música subida y guardada correctamente.");
   };
 
   const handleToggleMusic = async () => {
     const newVal = !musicEnabled;
     if (!settingsId) {
-       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), music_enabled: newVal }).select().single();
+       const newId = crypto.randomUUID();
+       const { data, error } = await supabase.from('global_settings').insert({ id: newId, music_enabled: newVal }).select().single();
        if (!error && data) {
          setSettingsId(data.id);
          setMusicEnabled(newVal);
@@ -210,17 +243,39 @@ export default function AdminPage() {
     }
     const { error } = await supabase.from('global_settings').update({ music_enabled: newVal }).eq('id', settingsId);
     if (!error) setMusicEnabled(newVal);
+    else alert("Error actualizando: " + error.message);
   };
 
   const handleToggleAppMusic = async () => {
     const newVal = !appMusicEnabled;
     setAppMusicEnabled(newVal);
+
+    if (!settingsId) {
+      const newId = crypto.randomUUID();
+      const { data, error } = await supabase
+        .from('global_settings')
+        .insert({ id: newId, app_music_enabled: newVal })
+        .select()
+        .single();
+      if (!error && data) setSettingsId(data.id);
+      return;
+    }
+    const { error } = await supabase
+      .from('global_settings')
+      .update({ app_music_enabled: newVal })
+      .eq('id', settingsId);
+    if (error) {
+      // Revert on failure
+      setAppMusicEnabled(!newVal);
+      alert("Error actualizando: " + error.message);
+    }
   };
 
   const handleDeletePoi = async (id: string) => {
     if (window.confirm("¿Seguro que deseas eliminar este punto de interés?")) {
       const { error } = await supabase.from('guide_pois').delete().eq('id', id);
       if (!error) setPois(pois.filter(p => p.id !== id));
+      else alert("Error: " + error.message);
     }
   };
 
@@ -240,6 +295,8 @@ export default function AdminPage() {
       const { error } = await supabase.from('guide_categories').delete().eq('id', id);
       if (!error) {
         fetchPois();
+      } else {
+        alert("Error: " + error.message);
       }
     }
   };
@@ -252,15 +309,18 @@ export default function AdminPage() {
       const { id, ...updateData } = newEmergency as any;
       const { error } = await supabase.from('emergency_numbers').update(updateData).eq('id', id);
       if (!error) {
-         setNewEmergency({ name: '', phone: '', icon: 'call', note: '' });
+         setNewEmergency({ name: '', phone: '', icon: 'phone', note: '' });
          fetchEmergencies();
+      } else {
+        alert("Error: " + error.message);
       }
     } else {
-      const { ...insertData } = newEmergency;
-      const { error } = await supabase.from('emergency_numbers').insert([{ ...insertData, id: crypto.randomUUID() }]);
+      const { error } = await supabase.from('emergency_numbers').insert([{ ...newEmergency, id: crypto.randomUUID() }]);
       if (!error) {
-         setNewEmergency({ name: '', phone: '', icon: 'call', note: '' });
+         setNewEmergency({ name: '', phone: '', icon: 'phone', note: '' });
          fetchEmergencies();
+      } else {
+        alert("Error: " + error.message);
       }
     }
   };
@@ -269,7 +329,14 @@ export default function AdminPage() {
     if (window.confirm("¿Eliminar este número de emergencia?")) {
       const { error } = await supabase.from('emergency_numbers').delete().eq('id', id);
       if (!error) fetchEmergencies();
+      else alert("Error: " + error.message);
     }
+  };
+
+  const isVideo = (url: string) => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return lower.includes('.mp4') || lower.includes('.mov') || lower.includes('.webm') || lower.includes('video');
   };
 
   if (loading) {
@@ -282,7 +349,7 @@ export default function AdminPage() {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 font-sans text-gray-900">
-      
+
       {/* SaaS HEADER */}
       <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-lg border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -295,7 +362,7 @@ export default function AdminPage() {
               <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider mt-0.5">{session.user.email}</p>
             </div>
           </div>
-          
+
           <button
             onClick={() => supabase.auth.signOut()}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
@@ -308,16 +375,17 @@ export default function AdminPage() {
 
       {/* DASHBOARD CONTENT */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-24">
-        
+
         {/* TABS */}
         <div className="flex overflow-x-auto border-b border-gray-200 mb-8 gap-6 text-sm font-semibold text-gray-500">
-          <button onClick={() => setActiveTab('rooms')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'rooms' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Habitaciones</button>
-          <button onClick={() => setActiveTab('texts')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'texts' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Textos Web</button>
-          <button onClick={() => setActiveTab('music')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'music' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Música Web</button>
-          <button onClick={() => setActiveTab('guide')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'guide' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Guía Huéspedes</button>
-          <button onClick={() => setActiveTab('emergencies')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'emergencies' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>Teléfonos Emergencia</button>
+          <button onClick={() => setActiveTab('rooms')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'rooms' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🏠 Habitaciones</button>
+          <button onClick={() => setActiveTab('texts')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'texts' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>📝 Textos Web</button>
+          <button onClick={() => setActiveTab('music')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'music' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🎵 Música</button>
+          <button onClick={() => setActiveTab('guide')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'guide' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🗺️ Guía Huéspedes</button>
+          <button onClick={() => setActiveTab('emergencies')} className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'emergencies' ? 'border-gray-900 text-gray-900' : 'border-transparent hover:text-gray-700'}`}>🚨 Emergencias</button>
         </div>
 
+        {/* =================== ROOMS TAB =================== */}
         {activeTab === 'rooms' && (
           <>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
@@ -325,7 +393,7 @@ export default function AdminPage() {
                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Tus Propiedades</h2>
                 <p className="text-gray-500 mt-1">Gestiona el contenido, precios y fotos multimedia de tus catálogos.</p>
               </div>
-              <button 
+              <button
                 onClick={() => { setEditingRoom(null); setShowModal(true); }}
                 className="flex items-center justify-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-black hover:shadow-md hover:-translate-y-0.5 transition-all w-full sm:w-auto"
               >
@@ -364,8 +432,16 @@ export default function AdminPage() {
                     <div key={acc.id} className="bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-lg transition-shadow overflow-hidden group flex flex-col">
                       <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                         {coverImg ? (
-                          (typeof coverImg === 'string' && (coverImg.toLowerCase().includes('.mp4') || coverImg.toLowerCase().includes('.mov') || coverImg.toLowerCase().includes('.webm'))) ? (
-                             <video src={coverImg} autoPlay muted loop playsInline className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                          isVideo(coverImg) ? (
+                            <video
+                              src={coverImg}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              preload="metadata"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
                           ) : (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img src={coverImg} alt={acc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -390,8 +466,8 @@ export default function AdminPage() {
                           <a href={`/habitaciones/${acc.slug}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors">
                             <Eye className="w-4 h-4" /> Ver Preview
                           </a>
-                          <div className="flex gap-1.5 focus:outline-none">
-                            <button onClick={() => { setEditingRoom(acc); setShowModal(true); }} className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1.5">Editar</button>
+                          <div className="flex gap-1.5">
+                            <button onClick={() => { setEditingRoom(acc); setShowModal(true); }} className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1.5">✏️ Editar</button>
                             <button onClick={() => handleDelete(acc.id, acc.name)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </div>
@@ -404,6 +480,7 @@ export default function AdminPage() {
           </>
         )}
 
+        {/* =================== TEXTS TAB =================== */}
         {activeTab === 'texts' && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <h2 className="text-xl font-bold mb-6">Textos Dinámicos de la Web</h2>
@@ -427,11 +504,13 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* =================== MUSIC TAB =================== */}
         {activeTab === 'music' && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold mb-6">Audio de Fondo de la Web</h2>
-            
+            <h2 className="text-xl font-bold mb-6">🎵 Audio de Fondo</h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Web Music Toggle */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <div>
                   <h4 className="font-bold text-gray-900">Música en Web</h4>
@@ -442,6 +521,7 @@ export default function AdminPage() {
                 </button>
               </div>
 
+              {/* App Music Toggle */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <div>
                   <h4 className="font-bold text-gray-900">Música en la App</h4>
@@ -454,169 +534,268 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-4">
-               <div>
-                  <h4 className="font-bold text-gray-700 text-sm mb-2">Archivo MP3 Actual</h4>
-                  {musicUrl ? (
-                    <audio controls src={musicUrl} className="w-full max-w-md"></audio>
-                  ) : <p className="text-gray-400 text-sm">No hay música configurada.</p>}
-               </div>
-               
-               <div className="pt-4 border-t border-gray-100">
-                 <h4 className="font-bold text-gray-700 text-sm mb-2">Subir nueva canción</h4>
-                 <input type="file" accept="audio/mpeg, audio/mp3" onChange={handleUploadMusic} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"/>
-                 {uploadingMusic && <p className="text-sm text-blue-600 mt-2">Subiendo...</p>}
-               </div>
+              <div>
+                <h4 className="font-bold text-gray-700 text-sm mb-2">Archivo MP3 Actual</h4>
+                {musicUrl ? (
+                  <audio controls src={musicUrl} className="w-full max-w-md"></audio>
+                ) : <p className="text-gray-400 text-sm">No hay música configurada aún.</p>}
+              </div>
+
+              <div className="pt-4 border-t border-gray-100">
+                <h4 className="font-bold text-gray-700 text-sm mb-2">Subir nueva canción (MP3)</h4>
+                <input
+                  type="file"
+                  accept="audio/mpeg,audio/mp3,.mp3"
+                  onChange={handleUploadMusic}
+                  disabled={uploadingMusic}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-black disabled:opacity-50"
+                />
+                {uploadingMusic && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+                    <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                    Subiendo archivo de música...
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
 
+        {/* =================== GUIDE TAB =================== */}
         {activeTab === 'guide' && (
           <div className="mb-6">
-             <div className="flex justify-between items-end mb-6">
-               <div>
+            <div className="flex justify-between items-end mb-6">
+              <div>
                 <h2 className="text-xl font-bold">Guía de Huéspedes App</h2>
                 <p className="text-sm text-gray-500">Agrega categorías dinámicas y comerciales por cada Zona.</p>
-               </div>
-             </div>
-             
-             {/* Selector de Zona & Globales */}
-             <div className="mb-6 border-b border-gray-200 pb-4">
-               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recomendaciones Globales</h3>
-               <div className="flex flex-wrap gap-2 mb-4">
-                 <button 
-                   onClick={() => setActiveZone('Recomendaciones Globales')}
-                   className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === 'Recomendaciones Globales' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                 >
-                   Recomendaciones Globales
-                 </button>
-               </div>
-               
-               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-4">Información por Zona (Locales)</h3>
-               <div className="flex flex-wrap gap-2">
-                 {zones.filter(z => z !== 'Recomendaciones Globales').map(z => (
-                   <button 
-                     key={z} 
-                     onClick={() => setActiveZone(z)}
-                     className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === z ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                   >
-                     {z}
-                   </button>
-                 ))}
-               </div>
-             </div>
+              </div>
+            </div>
 
-             {/* Gestión de Categorías para la Zona Activa */}
-             <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6 flex flex-wrap gap-4 justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-gray-800 text-lg">Categorías en {activeZone}</h3>
-                  <p className="text-xs text-gray-500">
-                    {activeZone === 'Recomendaciones Globales' 
-                      ? 'Ej: Restaurantes/Bares, Turismo, Playas/Ocio...'
-                      : 'Ej: Parkings, Farmacias, Supermercados...'}
-                  </p>
-                </div>
-                <div className="flex gap-2 w-full md:w-auto">
-                   <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nueva categoría..." className="border border-gray-300 rounded px-3 py-2 text-sm flex-1 outline-none focus:border-gray-900"/>
-                   <button onClick={handleAddCategory} className="bg-gray-900 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-black whitespace-nowrap">Crear Categoría</button>
-                </div>
-             </div>
+            {/* Selector de Zona */}
+            <div className="mb-6 border-b border-gray-200 pb-4">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recomendaciones Globales</h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button
+                  onClick={() => setActiveZone('Recomendaciones Globales')}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === 'Recomendaciones Globales' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                  🌍 Recomendaciones Globales
+                </button>
+              </div>
 
-             {loadingPois ? <p className="text-gray-500 p-4">Cargando datos principales...</p> : categories.filter(c => activeZone === 'Recomendaciones Globales' ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone)) : c.zone === activeZone).length === 0 ? <p className="text-gray-500 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl">No hay categorías en esta zona. ¡Crea la primera arriba!</p> : (
-               <div className="space-y-8">
-                 {categories.filter(c => activeZone === 'Recomendaciones Globales' ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone)) : c.zone === activeZone).map(cat => {
-                   const catPois = pois.filter(p => p.category_id === cat.id);
-                   return (
-                     <div key={cat.id} className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
-                       <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-4">Información por Zona (Locales)</h3>
+              <div className="flex flex-wrap gap-2">
+                {zones.filter(z => z !== 'Recomendaciones Globales').map(z => (
+                  <button
+                    key={z}
+                    onClick={() => setActiveZone(z)}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeZone === z ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  >
+                    📍 {z}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Add Category */}
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6 flex flex-wrap gap-4 justify-between items-center">
+              <div>
+                <h3 className="font-bold text-gray-800 text-lg">Categorías en {activeZone}</h3>
+                <p className="text-xs text-gray-500">
+                  {activeZone === 'Recomendaciones Globales'
+                    ? 'Ej: Restaurantes/Bares, Turismo, Playas/Ocio...'
+                    : 'Ej: Parkings, Farmacias, Supermercados...'}
+                </p>
+              </div>
+              <div className="flex gap-2 w-full md:w-auto">
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                  placeholder="Nueva categoría..."
+                  className="border border-gray-300 rounded px-3 py-2 text-sm flex-1 outline-none focus:border-gray-900"
+                />
+                <button onClick={handleAddCategory} className="bg-gray-900 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-black whitespace-nowrap">
+                  <Plus className="w-4 h-4 inline mr-1" />Crear Categoría
+                </button>
+              </div>
+            </div>
+
+            {/* Categories & POIs */}
+            {loadingPois ? (
+              <p className="text-gray-500 p-4">Cargando datos...</p>
+            ) : categories.filter(c =>
+                activeZone === 'Recomendaciones Globales'
+                  ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone))
+                  : c.zone === activeZone
+              ).length === 0 ? (
+              <p className="text-gray-500 p-4 text-center border-2 border-dashed border-gray-200 rounded-xl">
+                No hay categorías en esta zona. ¡Crea la primera arriba!
+              </p>
+            ) : (
+              <div className="space-y-8">
+                {categories
+                  .filter(c =>
+                    activeZone === 'Recomendaciones Globales'
+                      ? (!c.zone || c.zone === 'Recomendaciones Globales' || !zones.includes(c.zone))
+                      : c.zone === activeZone
+                  )
+                  .map(cat => {
+                    const catPois = pois.filter(p => p.category_id === cat.id);
+                    return (
+                      <div key={cat.id} className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
                           <h3 className="text-xl font-bold text-gray-900 uppercase tracking-wide">{cat.name}</h3>
                           <div className="flex gap-3">
-                             <button onClick={() => {
-                               setSelectedCategoryId(cat.id);
-                               setShowPoiModal(true);
-                             }} className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 flex items-center gap-1">
-                               <Plus className="w-4 h-4"/> Añadir Lugar
-                             </button>
-                             <button onClick={() => handleDeleteCategory(cat.id)} className="text-sm text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
-                               <Trash2 className="w-4 h-4"/> 
-                             </button>
+                            <button
+                              onClick={() => {
+                                setSelectedCategoryId(cat.id);
+                                setEditingPoi(null);
+                                setShowPoiModal(true);
+                              }}
+                              className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 flex items-center gap-1"
+                            >
+                              <Plus className="w-4 h-4"/> Añadir Lugar
+                            </button>
+                            <button onClick={() => handleDeleteCategory(cat.id)} className="text-sm text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                              <Trash2 className="w-4 h-4"/>
+                            </button>
                           </div>
-                       </div>
+                        </div>
 
-                       {catPois.length === 0 ? (
-                         <p className="text-sm text-gray-400 italic py-2">No hay lugares en esta categoría todavía.</p>
-                       ) : (
-                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                           {catPois.map(p => (
-                             <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col items-start shadow-sm bg-gray-50 hover:bg-white hover:border-gray-300 transition-colors">
+                        {catPois.length === 0 ? (
+                          <p className="text-sm text-gray-400 italic py-2">No hay lugares en esta categoría todavía.</p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                            {catPois.map(p => (
+                              <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col items-start shadow-sm bg-gray-50 hover:bg-white hover:border-gray-300 transition-colors">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 {p.thumb && <img src={p.thumb} alt={p.name} className="w-full h-32 object-cover rounded-lg mb-3" />}
                                 <h4 className="font-bold mt-2 text-gray-900 leading-tight">{p.name}</h4>
                                 {p.price && <span className="mt-1 text-[10px] font-bold text-white bg-green-600 px-2 py-0.5 rounded-full">{p.price}</span>}
                                 <p className="text-xs text-gray-500 mt-2 line-clamp-2 flex-1">{p.description}</p>
-                                
-                                <div className="mt-4 pt-3 border-t border-gray-200 w-full flex justify-between">
-                                   <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline"><MapPin className="w-3 h-3"/> Mapa</a>
-                                   <div className="flex gap-2">
-                                      <button onClick={() => {
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        (window as any).editPoiData = p;
+
+                                <div className="mt-4 pt-3 border-t border-gray-200 w-full flex justify-between items-center">
+                                  {p.mapLink ? (
+                                    <a href={p.mapLink} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">
+                                      <MapPin className="w-3 h-3"/>Mapa
+                                    </a>
+                                  ) : <span />}
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        setEditingPoi(p);
                                         setSelectedCategoryId(cat.id);
                                         setShowPoiModal(true);
-                                      }} className="text-xs text-gray-500 font-semibold hover:underline">Editar</button>
-                                      <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold hover:underline">Eliminar</button>
-                                    </div>
+                                      }}
+                                      className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded hover:bg-blue-100"
+                                    >
+                                      ✏️ Editar
+                                    </button>
+                                    <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold px-2 py-1 rounded hover:bg-red-50">
+                                      🗑️ Eliminar
+                                    </button>
+                                  </div>
                                 </div>
-                             </div>
-                           ))}
-                         </div>
-                       )}
-                     </div>
-                   );
-                 })}
-               </div>
-             )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         )}
 
+        {/* =================== EMERGENCIES TAB =================== */}
         {activeTab === 'emergencies' && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold mb-6">Teléfonos de Emergencia</h2>
-            
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-wrap gap-4 items-center">
-              <input type="text" value={newEmergency.name} onChange={e => setNewEmergency({...newEmergency, name: e.target.value})} placeholder="Nombre (ej. Ambulancia)" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none flex-1"/>
-              <input type="text" value={newEmergency.phone} onChange={e => setNewEmergency({...newEmergency, phone: e.target.value})} placeholder="Teléfono" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none flex-1"/>
-              <input type="text" value={newEmergency.icon} onChange={e => setNewEmergency({...newEmergency, icon: e.target.value})} placeholder="Icono (ej. local_police)" className="border border-gray-300 rounded px-3 py-2 text-sm outline-none w-32"/>
-              <button 
-                onClick={() => { setNewEmergency({ name: '', phone: '', icon: 'call', note: '' }); }} 
-                className="text-gray-500 px-3 py-2 text-sm hover:underline"
-              >
-                Limpiar
-              </button>
-              <button 
-                onClick={handleAddEmergency} 
-                className="bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-red-700 flex items-center gap-1"
-              >
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <Plus className="w-4 h-4"/> {(newEmergency as any).id ? 'Guardar' : 'Añadir'}
-              </button>
+            <h2 className="text-xl font-bold mb-6">🚨 Teléfonos de Emergencia</h2>
+
+            {/* Form to add/edit */}
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {(newEmergency as any).id && (
+                <p className="text-xs text-blue-600 font-semibold mb-3 bg-blue-50 px-3 py-1.5 rounded-lg">
+                  ✏️ Editando: {newEmergency.name} — Modifica los campos y pulsa Guardar
+                </p>
+              )}
+              <div className="flex flex-wrap gap-4 items-center">
+                <input
+                  type="text"
+                  value={newEmergency.name}
+                  onChange={e => setNewEmergency({...newEmergency, name: e.target.value})}
+                  placeholder="Nombre (ej. Ambulancia)"
+                  className="border border-gray-300 rounded px-3 py-2 text-sm outline-none flex-1 min-w-[150px]"
+                />
+                <input
+                  type="text"
+                  value={newEmergency.phone}
+                  onChange={e => setNewEmergency({...newEmergency, phone: e.target.value})}
+                  placeholder="Teléfono"
+                  className="border border-gray-300 rounded px-3 py-2 text-sm outline-none flex-1 min-w-[120px]"
+                />
+                <input
+                  type="text"
+                  value={newEmergency.icon}
+                  onChange={e => setNewEmergency({...newEmergency, icon: e.target.value})}
+                  placeholder="Icono Material (ej. local_police)"
+                  className="border border-gray-300 rounded px-3 py-2 text-sm outline-none w-44"
+                />
+                <button
+                  onClick={() => { setNewEmergency({ name: '', phone: '', icon: 'phone', note: '' }); }}
+                  className="text-gray-500 px-3 py-2 text-sm hover:underline"
+                >
+                  Limpiar
+                </button>
+                <button
+                  onClick={handleAddEmergency}
+                  className="bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-red-700 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4"/>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {(newEmergency as any).id ? 'Guardar Cambios' : 'Añadir'}
+                </button>
+              </div>
             </div>
 
-            {loadingEms ? <p className="text-gray-500">Cargando...</p> : (
+            {/* Emergency list */}
+            {loadingEms ? (
+              <p className="text-gray-500">Cargando...</p>
+            ) : emergencies.length === 0 ? (
+              <p className="text-gray-500 text-center py-12 border-2 border-dashed border-gray-200 rounded-xl">
+                No hay teléfonos de emergencia configurados aún.
+              </p>
+            ) : (
               <div className="space-y-3">
                 {emergencies.map(em => (
-                  <div key={em.id} className="flex justify-between items-center bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                  <div key={em.id} className="flex justify-between items-center bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex gap-4 items-center">
                       <div className="w-10 h-10 bg-red-50 text-red-600 rounded-full flex items-center justify-center">
-                        <span className="material-symbols-outlined">{em.icon}</span>
+                        <span className="material-symbols-outlined text-lg">{em.icon}</span>
                       </div>
                       <div>
                         <h4 className="font-bold text-gray-900">{em.name}</h4>
                         <p className="font-mono text-sm text-gray-500">{em.phone}</p>
+                        {em.note && <p className="text-xs text-gray-400">{em.note}</p>}
                       </div>
                     </div>
                     <div className="flex gap-2">
-                       <button onClick={() => setNewEmergency(em)} className="text-blue-500 hover:bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-semibold">Editar</button>
-                       <button onClick={() => handleDeleteEmergency(em.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 className="w-5 h-5"/></button>
+                      <button
+                        onClick={() => setNewEmergency(em)}
+                        className="text-blue-500 hover:bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-semibold"
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteEmergency(em.id)}
+                        className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
+                      >
+                        <Trash2 className="w-5 h-5"/>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -627,31 +806,36 @@ export default function AdminPage() {
 
       </main>
 
+      {/* ROOM MODAL */}
       {showModal && (
-        <RoomFormModal 
+        <RoomFormModal
           initialData={editingRoom}
-          onClose={() => setShowModal(false)} 
+          onClose={() => { setShowModal(false); setEditingRoom(null); }}
           onSuccess={() => {
             setShowModal(false);
             setEditingRoom(null);
             fetchAccommodations();
-          }} 
+          }}
         />
       )}
 
+      {/* POI MODAL */}
       {showPoiModal && selectedCategoryId && (
-        <PoiFormModal 
+        <PoiFormModal
           categoryId={selectedCategoryId}
           zone={activeZone}
+          initialData={editingPoi}
           onClose={() => {
             setShowPoiModal(false);
             setSelectedCategoryId(null);
-          }} 
+            setEditingPoi(null);
+          }}
           onSuccess={() => {
             setShowPoiModal(false);
             setSelectedCategoryId(null);
+            setEditingPoi(null);
             fetchPois();
-          }} 
+          }}
         />
       )}
     </div>
