@@ -308,6 +308,20 @@ export default function AdminPage() {
     }
   };
 
+  // Opens the POI modal — creates the DB category first if it doesn't exist yet
+  const openPoiModal = async (catName: string, zone: string, existingPoi?: Record<string, string> | null) => {
+    let catId = categories.find(c => c.name === catName && c.zone === zone)?.id ?? null;
+    if (!catId) {
+      const newId = crypto.randomUUID();
+      const { error } = await supabase.from('guide_categories').insert({ id: newId, name: catName, zone });
+      if (error) { alert('Error al inicializar categoría: ' + error.message); return; }
+      catId = newId;
+      setCategories(prev => [...prev, { id: newId, name: catName, zone }]);
+    }
+    setSelectedCategoryId(catId);
+    setEditingPoi(existingPoi ?? null);
+    setShowPoiModal(true);
+  };
 
   const handleAddEmergency = async () => {
     if (!newEmergency.name || !newEmergency.phone) return;
@@ -625,21 +639,19 @@ export default function AdminPage() {
                           </h4>
                           <p className="text-xs text-gray-400 mt-0.5">{catPois.length} lugares publicados</p>
                         </div>
-                        {cat && (
-                          <button
-                            onClick={() => { setSelectedCategoryId(cat.id); setEditingPoi(null); setShowPoiModal(true); }}
-                            className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-black transition-colors"
-                          >
-                            <Plus className="w-4 h-4" /> Añadir Lugar
-                          </button>
-                        )}
+                        <button
+                          onClick={() => openPoiModal(activeGlobalCatName, GLOBAL_ZONE)}
+                          className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-black transition-colors"
+                        >
+                          <Plus className="w-4 h-4" /> Añadir Lugar
+                        </button>
                       </div>
                       {loadingPois ? (
                         <p className="text-gray-400 text-sm py-4">Cargando...</p>
                       ) : catPois.length === 0 ? (
                         <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
                           <p className="text-gray-400 text-sm">No hay lugares en {activeGlobalCatName} todavía.</p>
-                          {cat && <button onClick={() => { setSelectedCategoryId(cat.id); setEditingPoi(null); setShowPoiModal(true); }} className="mt-3 text-sm underline text-gray-500 hover:text-gray-700">+ Añadir el primero</button>}
+                          <button onClick={() => openPoiModal(activeGlobalCatName, GLOBAL_ZONE)} className="mt-3 text-sm underline text-gray-500 hover:text-gray-700">+ Añadir el primero</button>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -657,7 +669,7 @@ export default function AdminPage() {
                                   </a>
                                 ) : <span />}
                                 <div className="flex gap-1.5">
-                                  <button onClick={() => { setEditingPoi(p); setSelectedCategoryId(cat!.id); setShowPoiModal(true); }} className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded-lg hover:bg-blue-100">✏️ Editar</button>
+                                  <button onClick={() => openPoiModal(activeGlobalCatName, GLOBAL_ZONE, p)} className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded-lg hover:bg-blue-100">✏️ Editar</button>
                                   <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold px-2 py-1 rounded-lg hover:bg-red-50">🗑️</button>
                                 </div>
                               </div>
@@ -715,7 +727,7 @@ export default function AdminPage() {
                           <p className="text-xs text-gray-400 mt-0.5">{zonePois.length} lugares publicados</p>
                         </div>
                         <button
-                          onClick={() => { if (defaultCatId) { setSelectedCategoryId(defaultCatId); setEditingPoi(null); setShowPoiModal(true); } }}
+                          onClick={() => openPoiModal('Lugares', activeZone)}
                           className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-black transition-colors"
                         >
                           <Plus className="w-4 h-4" /> Añadir Lugar
@@ -745,7 +757,7 @@ export default function AdminPage() {
                                     </a>
                                   ) : <span />}
                                   <div className="flex gap-1.5">
-                                    <button onClick={() => { setEditingPoi(p); setSelectedCategoryId(pCat?.id ?? defaultCatId); setShowPoiModal(true); }} className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded-lg hover:bg-blue-100">✏️ Editar</button>
+                                    <button onClick={() => openPoiModal('Lugares', activeZone, p)} className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded-lg hover:bg-blue-100">✏️ Editar</button>
                                     <button onClick={() => handleDeletePoi(p.id)} className="text-xs text-red-500 font-semibold px-2 py-1 rounded-lg hover:bg-red-50">🗑️</button>
                                   </div>
                                 </div>
