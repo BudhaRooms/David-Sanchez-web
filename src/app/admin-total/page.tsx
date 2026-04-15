@@ -153,9 +153,9 @@ export default function AdminPage() {
           toCreate.push({ id: crypto.randomUUID(), name: 'Lugares', zone });
       }
 
-      // 3. If any missing, insert with ignoreDuplicates=true to prevent concurrent race duplicates
+      // 3. If any missing, insert them (pre-check above guards against duplicates)
       if (toCreate.length > 0) {
-        await supabase.from('guide_categories').insert(toCreate, { ignoreDuplicates: true });
+        await supabase.from('guide_categories').insert(toCreate);
         const { data: freshCats } = await supabase
           .from('guide_categories')
           .select('*')
