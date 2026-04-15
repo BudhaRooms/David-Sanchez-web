@@ -153,9 +153,9 @@ export default function AdminPage() {
           toCreate.push({ id: crypto.randomUUID(), name: 'Lugares', zone });
       }
 
-      // 3. If any missing, insert them and re-fetch categories (exactly once)
+      // 3. If any missing, insert with ignoreDuplicates=true to prevent concurrent race duplicates
       if (toCreate.length > 0) {
-        await supabase.from('guide_categories').insert(toCreate);
+        await supabase.from('guide_categories').insert(toCreate, { ignoreDuplicates: true });
         const { data: freshCats } = await supabase
           .from('guide_categories')
           .select('*')
@@ -172,7 +172,6 @@ export default function AdminPage() {
         .order('created_at', { ascending: false });
       setPois(ps || []);
     } finally {
-      // Always unblock the UI — no recursive calls
       setLoadingPois(false);
     }
   }
