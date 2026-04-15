@@ -307,18 +307,6 @@ export default function AdminPage() {
   };
 
 
-
-  const handleDeleteCategory = async (id: string) => {
-    if (window.confirm("¿Seguro que deseas eliminar esta categoría y TODOS sus lugares?")) {
-      const { error } = await supabase.from('guide_categories').delete().eq('id', id);
-      if (!error) {
-        fetchPois();
-      } else {
-        alert("Error: " + error.message);
-      }
-    }
-  };
-
   const handleAddEmergency = async () => {
     if (!newEmergency.name || !newEmergency.phone) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
