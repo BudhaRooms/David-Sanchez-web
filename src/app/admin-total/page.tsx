@@ -718,7 +718,6 @@ export default function AdminPage() {
                 {activeGuideSection === 'zone' && (() => {
                   const zoneCats = categories.filter(c => c.zone === activeZone);
                   const zonePois = pois.filter(p => zoneCats.some(c => c.id === p.category_id));
-                  const defaultCatId = zoneCats[0]?.id ?? null;
                   return (
                     <div>
                       <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
@@ -742,7 +741,6 @@ export default function AdminPage() {
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                           {zonePois.map(p => {
-                            const pCat = zoneCats.find(c => c.id === p.category_id);
                             return (
                               <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col bg-gray-50 hover:bg-white hover:border-gray-300 hover:shadow-sm transition-all">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
