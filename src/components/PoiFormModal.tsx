@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { X, Upload, Save, Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -22,19 +22,25 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
     mapLink: initialData?.mapLink || '',
     price: initialData?.price || ''
   });
-  const [existingThumb, setExistingThumb] = useState<string>(initialData?.thumb || '');
+  const [existingThumb] = useState<string>(initialData?.thumb || '');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const prevPreviewRef = useRef<string>('');
 
-  useEffect(() => {
-    if (file) {
-      const url = URL.createObjectURL(file);
+  const handleFileChange = (newFile: File | null) => {
+    if (prevPreviewRef.current) {
+      URL.revokeObjectURL(prevPreviewRef.current);
+      prevPreviewRef.current = '';
+    }
+    if (newFile) {
+      const url = URL.createObjectURL(newFile);
+      prevPreviewRef.current = url;
       setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
     } else {
       setPreviewUrl('');
     }
-  }, [file]);
+    setFile(newFile);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +88,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-0">
       <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={onClose}></div>
 
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden relative z-10 max-h-[90vh] flex flex-col">
@@ -133,7 +139,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
                   <Upload className="w-5 h-5 text-gray-400" />
                   <span className="font-medium text-sm text-gray-500">{file ? file.name : (existingThumb ? "Cambiar foto" : "Haga clic para seleccionar")}</span>
                 </span>
-                <input type="file" name="file_upload" className="hidden" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                <input type="file" name="file_upload" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e.target.files?.[0] || null)} />
               </label>
             </div>
 
