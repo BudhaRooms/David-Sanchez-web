@@ -117,8 +117,9 @@ export default function AdminPage() {
       setMusicEnabled(data.music_enabled ?? true);
       setAppMusicEnabled(data.app_music_enabled ?? true);
       setHeroTitle(data.hero_title || '');
-      setHeroText1(data.hero_text_1 || '');
-      setHeroText2(data.hero_text_2 || '');
+      // Columns are text_block_1 / text_block_2 in the DB
+      setHeroText1(data.text_block_1 || data.hero_text_1 || '');
+      setHeroText2(data.text_block_2 || data.hero_text_2 || '');
     }
   }
 
@@ -166,21 +167,24 @@ export default function AdminPage() {
 
   const handleSaveTexts = async () => {
     setSavingTexts(true);
-    let currentId = settingsId;
-    if (!currentId) {
-       const { data, error } = await supabase.from('global_settings').insert({ id: crypto.randomUUID(), hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 }).select().single();
-       if (!error && data) {
-         setSettingsId(data.id);
-         currentId = data.id;
-       }
+    const payload = { hero_title: heroTitle, text_block_1: heroText1, text_block_2: heroText2 };
+    if (!settingsId) {
+       const newId = crypto.randomUUID();
+       const { data, error } = await supabase
+         .from('global_settings')
+         .insert({ id: newId, ...payload })
+         .select().single();
+       if (!error && data) setSettingsId(data.id);
+       else if (error) { alert("Error guardando textos: " + error.message); setSavingTexts(false); return; }
     } else {
-       const { error } = await supabase.from('global_settings')
-         .update({ hero_title: heroTitle, hero_text_1: heroText1, hero_text_2: heroText2 })
-         .eq('id', currentId);
-       if (error) alert("Error guardando textos: " + error.message);
+       const { error } = await supabase
+         .from('global_settings')
+         .update(payload)
+         .eq('id', settingsId);
+       if (error) { alert("Error guardando textos: " + error.message); setSavingTexts(false); return; }
     }
     setSavingTexts(false);
-    alert("Textos guardados correctamente.");
+    alert("✅ Textos guardados correctamente.");
   };
 
   const handleUploadMusic = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,44 +194,34 @@ export default function AdminPage() {
 
     const filename = `track-${Date.now()}.mp3`;
 
-    // Bucket 'music' already exists and is public — just upload
     const { error: uploadError } = await supabase.storage.from('music').upload(filename, file, {
       upsert: true,
     });
 
     if (uploadError) {
-      alert("Error subiendo música: " + uploadError.message);
+      alert("❌ Error subiendo música: " + uploadError.message);
       setUploadingMusic(false);
       return;
     }
 
     const publicUrl = supabase.storage.from('music').getPublicUrl(filename).data.publicUrl;
 
-    if (settingsId) {
-      const { error: dbError } = await supabase.from('global_settings').update({ music_url: publicUrl }).eq('id', settingsId);
-      if (dbError) {
-        alert("Error actualizando url: " + dbError.message);
-      } else {
-        setMusicUrl(publicUrl);
-      }
-    } else {
-      const newId = crypto.randomUUID();
-      const { data, error: dbError } = await supabase
-        .from('global_settings')
-        .insert({ id: newId, music_url: publicUrl, music_enabled: true, app_music_enabled: true })
-        .select()
-        .single();
-      if (dbError) {
-        alert("Error insertando url: " + dbError.message);
-      } else if (data) {
-        setSettingsId(data.id);
-        setMusicUrl(publicUrl);
-        setMusicEnabled(true);
-        setAppMusicEnabled(true);
-      }
+    // Always try UPSERT: update if row exists, insert otherwise
+    const upsertId = settingsId || crypto.randomUUID();
+    const { data, error: dbError } = await supabase
+      .from('global_settings')
+      .upsert({ id: upsertId, music_url: publicUrl, music_enabled: musicEnabled, app_music_enabled: appMusicEnabled })
+      .select()
+      .single();
+
+    if (dbError) {
+      alert("❌ Error guardando URL de música: " + dbError.message);
+    } else if (data) {
+      setSettingsId(data.id);
+      setMusicUrl(publicUrl);
+      alert("🎵 Música subida y guardada correctamente.");
     }
     setUploadingMusic(false);
-    alert("🎵 Música subida y guardada correctamente.");
   };
 
   const handleToggleMusic = async () => {
