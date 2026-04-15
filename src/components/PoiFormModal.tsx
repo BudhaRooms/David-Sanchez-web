@@ -19,7 +19,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
     id: initialData?.id || '',
     name: initialData?.name || '',
     description: initialData?.description || '',
-    mapLink: initialData?.mapLink || '',
+    map_link: initialData?.map_link || '',
     price: initialData?.price || ''
   });
   const [existingThumb] = useState<string>(initialData?.thumb || '');
@@ -64,7 +64,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
         category_id: categoryId,
         zone: zone,
         description: formData.description,
-        mapLink: formData.mapLink,
+        map_link: formData.map_link,
         price: formData.price,
         thumb: thumbUrl,
       }).eq('id', formData.id);
@@ -75,7 +75,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
         category_id: categoryId,
         zone: zone,
         description: formData.description,
-        mapLink: formData.mapLink,
+        map_link: formData.map_link,
         price: formData.price,
         thumb: thumbUrl,
       }]);
@@ -119,7 +119,7 @@ export function PoiFormModal({ categoryId, zone, onClose, onSuccess, initialData
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Link Google Maps</label>
-                <input value={formData.mapLink} onChange={e => setFormData({...formData, mapLink: e.target.value})} type="url" className="w-full border-gray-300 rounded-lg shadow-sm border p-2 text-sm focus:ring-gray-900 outline-none" placeholder="https://maps.google.com/..." />
+                <input value={formData.map_link} onChange={e => setFormData({...formData, map_link: e.target.value})} type="url" className="w-full border-gray-300 rounded-lg shadow-sm border p-2 text-sm focus:ring-gray-900 outline-none" placeholder="https://maps.google.com/..." />
               </div>
             </div>
 
