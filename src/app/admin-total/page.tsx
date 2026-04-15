@@ -130,51 +130,53 @@ export default function AdminPage() {
 
   async function fetchPois() {
     setLoadingPois(true);
-    const { data: cats, error: catErr } = await supabase
-      .from('guide_categories')
-      .select('*')
-      .order('created_at', { ascending: true });
+    try {
+      // 1. Fetch categories
+      const { data: cats } = await supabase
+        .from('guide_categories')
+        .select('*')
+        .order('created_at', { ascending: true });
+      const allCats = cats || [];
 
-    if (catErr) console.error("Error fetching categories:", catErr.message);
-    const allCats = cats || [];
-    setCategories(allCats);
+      // 2. Decide which predefined categories are missing
+      const GLOBAL_CATS_LOCAL = ['Restaurantes', 'Playas', 'Centros Comerciales', 'Ocio Nocturno', 'Zonas Concurridas', 'Monumentos', 'Culturales'];
+      const ZONE_NAMES_LOCAL = ['Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
+      const GLOBAL_ZONE_LOCAL = 'Recomendaciones Globales';
+      const toCreate: { id: string; name: string; zone: string }[] = [];
 
-    const { data: ps, error: poiErr } = await supabase
-      .from('guide_pois')
-      .select('*')
-      .order('created_at', { ascending: false });
+      for (const name of GLOBAL_CATS_LOCAL) {
+        if (!allCats.find(c => c.name === name && c.zone === GLOBAL_ZONE_LOCAL))
+          toCreate.push({ id: crypto.randomUUID(), name, zone: GLOBAL_ZONE_LOCAL });
+      }
+      for (const zone of ZONE_NAMES_LOCAL) {
+        if (!allCats.find(c => c.zone === zone))
+          toCreate.push({ id: crypto.randomUUID(), name: 'Lugares', zone });
+      }
 
-    if (poiErr) console.error("Error fetching POIs:", poiErr.message);
-    if (ps) setPois(ps);
-    setLoadingPois(false);
+      // 3. If any missing, insert them and re-fetch categories (exactly once)
+      if (toCreate.length > 0) {
+        await supabase.from('guide_categories').insert(toCreate);
+        const { data: freshCats } = await supabase
+          .from('guide_categories')
+          .select('*')
+          .order('created_at', { ascending: true });
+        setCategories(freshCats || []);
+      } else {
+        setCategories(allCats);
+      }
 
-    // Auto-ensure all predefined categories exist
-    await ensureGlobalCategories(allCats);
+      // 4. Fetch POIs
+      const { data: ps } = await supabase
+        .from('guide_pois')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setPois(ps || []);
+    } finally {
+      // Always unblock the UI — no recursive calls
+      setLoadingPois(false);
+    }
   }
 
-  async function ensureGlobalCategories(existingCats: Record<string, string>[]) {
-    const GLOBAL_CATS_LOCAL = ['Restaurantes', 'Playas', 'Centros Comerciales', 'Ocio Nocturno', 'Zonas Concurridas', 'Monumentos', 'Culturales'];
-    const ZONE_NAMES_LOCAL = ['Mercado Central', 'Corte Inglés', 'Plaza de Toros', 'Puente Rojo', 'Auditorio'];
-    const GLOBAL_ZONE_LOCAL = 'Recomendaciones Globales';
-
-    const toCreate: { id: string; name: string; zone: string }[] = [];
-
-    // Ensure 7 global categories
-    for (const name of GLOBAL_CATS_LOCAL) {
-      const exists = existingCats.find(c => c.name === name && c.zone === GLOBAL_ZONE_LOCAL);
-      if (!exists) toCreate.push({ id: crypto.randomUUID(), name, zone: GLOBAL_ZONE_LOCAL });
-    }
-    // Ensure 1 default category per zone
-    for (const zone of ZONE_NAMES_LOCAL) {
-      const exists = existingCats.find(c => c.zone === zone);
-      if (!exists) toCreate.push({ id: crypto.randomUUID(), name: 'Lugares', zone });
-    }
-
-    if (toCreate.length > 0) {
-      const { error } = await supabase.from('guide_categories').insert(toCreate);
-      if (!error) fetchPois(); // refresh after creation
-    }
-  }
 
   async function fetchEmergencies() {
     setLoadingEms(true);
