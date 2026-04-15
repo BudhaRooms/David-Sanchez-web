@@ -19,8 +19,8 @@ export default async function Page() {
     .select('*');
 
   const { data: globalSettings } = await supabase.from('global_settings').select('*').limit(1).maybeSingle();
-  const heroText1 = globalSettings?.hero_text_1 || 'Las mejores habitaciones de Alicante';
-  const heroText2 = globalSettings?.hero_text_2 || 'En Budha Rooms, cada detalle ha sido orquestado para ofrecerte una experiencia de lujo.';
+  const heroText1 = globalSettings?.text_block_1 || globalSettings?.hero_text_1 || 'Las mejores habitaciones de Alicante';
+  const heroText2 = globalSettings?.text_block_2 || globalSettings?.hero_text_2 || 'En Budha Rooms, cada detalle ha sido orquestado para ofrecerte una experiencia de lujo.';
 
   const allAccommodations = accommodationsraw?.sort((a, b) => {
     const orderA = a.size ? parseInt(a.size, 10) : Number.MAX_SAFE_INTEGER;
